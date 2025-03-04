@@ -1,0 +1,3 @@
+jones, loc1, prod1, 10
+smith, loc1, prod1, 20
+jones, loc1, prod1, 10

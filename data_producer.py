@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+from kafka import KafkaProducer
+from time import sleep
+
+def producer_f(topic,broker_addr):
+
+    producer = KafkaProducer(bootstrap_servers=broker_addr,api_version=(2,0,2))
+    
+    filename = topic+".txt"
+    file_src = open(filename,"r")
+    count = 0
+
+    while True:
+        count += 1
+        line = file_src.readline().strip() # getting rid of \n
+        producer.send(topic,line.encode() )
+        
+        sleep(1)
+
+        # if line is empty
+        # end of file is reached
+        if not line:
+            break
+        print("\nProduced input tuple {}: {}".format(count-1, line))
+        #print("Sent {}".format(line))
+
+    file_src.close()
+
+    producer.flush()
+    print("\nDone with producing data to topic {}.".format(topic))
+
+data_pipe = 'Data'
+broker_addr = '127.0.0.1:29092'
+
+producer_f(data_pipe, broker_addr)
+
