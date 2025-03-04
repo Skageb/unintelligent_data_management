@@ -15,8 +15,8 @@ def prepare_dw():
     conn = None
     create_db = " CREATE DATABASE dw"
     use_db = "use dw"
-    create_table = "CREATE TABLE fact (factId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "locid VARCHAR(20), prodid VARCHAR(20),sale REAL)"        
+
+    create_table = "CREATE TABLE fatalities (fatalitiesId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, fatalities INT)"          
 
     try:  
         conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!

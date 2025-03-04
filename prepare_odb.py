@@ -16,8 +16,9 @@ def prepare_odb():
     conn = None
     create_db = " CREATE DATABASE odb"
     use_db = "use odb"
-    create_table = "CREATE TABLE transaction (transId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, " \
-                     "customer VARCHAR(20), location VARCHAR(20), product VARCHAR(20),sale REAL)"        
+   
+    create_table = "CREATE TABLE terrorism (eventId INT NOT NULL PRIMARY KEY, " \
+                     "year YEAR, region VARCHAR(20), country VARCHAR(20), state VARCHAR(20), group_name VARCHAR(20), tot_fatalities INT)"        
 
     try:  
         conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!

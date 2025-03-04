@@ -14,8 +14,8 @@ from kafka import KafkaConsumer
 def dw_consumer():
     # Connect to MySQL database
     dw_conn = None
-    dw_load_query = "INSERT INTO fact(locid,prodid,sale) " \
-                     "VALUES(%s,%s,%s)"
+    dw_load_query = "INSERT INTO fatalities(year,fatalities) " \
+                     "VALUES(%s,%s)"
     
     consumer = KafkaConsumer('AggrData',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     
@@ -29,17 +29,16 @@ def dw_consumer():
         #print ('\nMesssage Received: {}'.format(in_string))
         in_split = in_string.split(',')
         
-        location = in_split[0].strip(' \'')
-        product = in_split[1].strip(' \'')
-        sale = in_split[2].strip(' \'')
+        year = int(in_split[0].strip())
+        fatalities = int(in_split[1].strip())
         
-        in_tuple = (location,product,sale)
+        in_tuple = (year,fatalities)
         print ('\nTuple Received: {}'.format(in_tuple))
         aggr_tuples.append(in_tuple)
         
         z = z+1
         
-        if z == 1:
+        if z == 2:
           break
     
     try:  
@@ -61,7 +60,7 @@ def dw_consumer():
         
         dw_conn.commit()
         
-        dw_cursor.execute("SELECT count(*) FROM fact")
+        dw_cursor.execute("SELECT count(*) FROM fatalities")
         res = dw_cursor.fetchone()
     
         print('DW is loaded: {} new tuples are inserted'.format(len(aggr_tuples)))

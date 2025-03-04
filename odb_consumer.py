@@ -18,8 +18,8 @@ from time import sleep
 def odb_consumer():
     # Connect to MySQL database
     conn = None
-    query = "INSERT INTO transaction(customer,location,product,sale) " \
-            "VALUES(%s,%s,%s,%s)"
+    query = "INSERT INTO terrorism(eventID, year, region, country,state, group_name, tot_fatalities) " \
+            "VALUES(%s, %s,%s,%s, %s, %s, %s)"
     
     consumer = KafkaConsumer('Data',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
@@ -38,11 +38,15 @@ def odb_consumer():
         
         sleep(1)
         
-        name = in_tuple[0]
-        location = in_tuple[1]
-        product = in_tuple[2]
-        sale = in_tuple[3]
-        tuples.append((name,location,product,sale))
+        eventID = in_tuple[0]
+        year = in_tuple[1]
+        region = in_tuple[2]
+        country = in_tuple[3]
+        state = in_tuple[4]
+        group_name = in_tuple[5]
+        tot_fatalities = in_tuple[6]
+
+        tuples.append((eventID,year,region,country,state,group_name,tot_fatalities))
         
         z = z+1
         
@@ -65,7 +69,7 @@ def odb_consumer():
             
         conn.commit()
         
-        cursor.execute("SELECT count(*) FROM transaction")
+        cursor.execute("SELECT count(*) FROM terrorism")
         res = cursor.fetchone()
     
         print('ODB is populated: {} new tuples are inserted'.format(len(tuples)))

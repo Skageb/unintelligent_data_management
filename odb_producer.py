@@ -15,9 +15,9 @@ from time import sleep
 def odb_producer():
     # Connect to MySQL database
     odb_conn = None
-    odb_aggregate_query = "SELECT location, product, sum(sale) "\
-                          " FROM transaction "\
-                          " GROUP BY location, product"    
+    odb_aggregate_query = "SELECT year, sum(tot_fatalities) "\
+                          " FROM terrorism "\
+                          " GROUP BY year"    
                           
     consumer = KafkaConsumer('odb-update-stream',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))                      
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
@@ -46,11 +46,12 @@ def odb_producer():
         aggr_tuples = odb_cursor.fetchall()
         
         for tuple in aggr_tuples :
+            tuple = (tuple[0], int(tuple[1]))
             in_string = ''.join(str(tuple)).strip('()')
             producer.send('AggrData',in_string.encode() )
             print("\nProduced aggregated tuple: {}".format(tuple))
-    
-        
+
+        producer.flush()
             
     except Error as e:
         print(e)
