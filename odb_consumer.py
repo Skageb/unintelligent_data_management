@@ -12,7 +12,6 @@ import mysql.connector
 from mysql.connector import Error
 
 from kafka import KafkaConsumer, KafkaProducer
-#import json
 from time import sleep
 
 def odb_consumer():
@@ -29,14 +28,18 @@ def odb_consumer():
     print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
     
     tuples = [] 
-    z = 0
 
     for message in consumer:
         in_string = message.value.decode()
+
+        if in_string == "DONE":
+            print("\nProducer has finished sending data. Processing remaining tuples...")
+            break
+        
         in_tuple = in_string.strip('"').split(',')
         print ('\nInput Tuple Received: {}'.format(in_tuple))
         
-        sleep(1)
+        #sleep(1)
 
         eventID = in_tuple[0]
         year = in_tuple[1]
@@ -46,10 +49,6 @@ def odb_consumer():
 
         tuples.append((eventID,year,month,day,fatalities))
         
-        z = z+1
-        
-        if z == 15:
-          break
      
     try:  
         conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
@@ -73,7 +72,7 @@ def odb_consumer():
         print('ODB is populated: {} new tuples are inserted'.format(len(tuples)))
         print('                  {} total tuples are inserted'.format(res[0]))    
         
-        sleep(2)
+        #sleep(2)
         
         m = 'odb update event'   
         producer.send('odb-update-stream', m.encode())

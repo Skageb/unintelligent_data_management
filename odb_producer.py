@@ -27,7 +27,7 @@ def odb_producer():
         print ('\nODB UPDATE EVENT RECEIVED FROM odb-update-stream')
         print ('Producing aggregated tuple for AggrData stream ...')
         
-        sleep(1)
+        #sleep(1)
         
         break
                            
@@ -51,6 +51,7 @@ def odb_producer():
             producer.send('AggrData',in_string.encode() )
             print("\nProduced aggregated tuple: {}".format(tuple))
 
+        producer.send('AggrData', b"DONE")
         producer.flush()
             
     except Error as e:

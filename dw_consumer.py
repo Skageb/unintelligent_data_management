@@ -22,10 +22,14 @@ def dw_consumer():
     print('\nWaiting for AGGREGATED TUPLES, Ctr/Z to stop ...')
     
     aggr_tuples = [] 
-    z = 0
 
     for message in consumer:
         in_string = message.value.decode()
+
+        if in_string == "DONE":
+            print("\nProducer has finished sending data. Processing remaining tuples...")
+            break
+
         #print ('\nMesssage Received: {}'.format(in_string))
         in_split = in_string.split(',')
         
@@ -35,11 +39,6 @@ def dw_consumer():
         in_tuple = (year,fatalities)
         print ('\nTuple Received: {}'.format(in_tuple))
         aggr_tuples.append(in_tuple)
-        
-        z = z+1
-        
-        if z == 1:
-          break
     
     try:  
         dw_conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!

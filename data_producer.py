@@ -12,7 +12,7 @@ def producer_f(topic,broker_addr):
     
     try:
         df = pd.read_csv(filename,usecols=["eventid","iyear","imonth","iday", "nkill"])
-        df = df[15:30]
+        df = df[20000:25000]
         df['nkill'] = df['nkill'].fillna(0)
 
     except FileNotFoundError:
@@ -32,7 +32,7 @@ def producer_f(topic,broker_addr):
         line = ",".join(map(str,row.values))
         producer.send(topic,line.encode())
         
-        sleep(1)
+        #sleep(1)
 
         if not line:
             break
@@ -40,6 +40,7 @@ def producer_f(topic,broker_addr):
 
         index +=1
 
+    producer.send(topic, b"DONE")
     producer.flush()
     print("\nDone with producing data to topic {}.".format(topic))
 
