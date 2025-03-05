@@ -15,7 +15,7 @@ from time import sleep
 def odb_producer():
     # Connect to MySQL database
     odb_conn = None
-    odb_aggregate_query = "SELECT year, sum(tot_fatalities) "\
+    odb_aggregate_query = "SELECT year, sum(fatalities) "\
                           " FROM terrorism "\
                           " GROUP BY year"    
                           

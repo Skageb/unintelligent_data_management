@@ -18,8 +18,8 @@ from time import sleep
 def odb_consumer():
     # Connect to MySQL database
     conn = None
-    query = "INSERT INTO terrorism(eventID, year, region, country,state, group_name, tot_fatalities) " \
-            "VALUES(%s, %s,%s,%s, %s, %s, %s)"
+    query = "INSERT INTO terrorism(eventid, year, month, day, fatalities) " \
+            "VALUES(%s, %s,%s,%s,%s)"
     
     consumer = KafkaConsumer('Data',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
@@ -37,20 +37,18 @@ def odb_consumer():
         print ('\nInput Tuple Received: {}'.format(in_tuple))
         
         sleep(1)
-        
+
         eventID = in_tuple[0]
         year = in_tuple[1]
-        region = in_tuple[2]
-        country = in_tuple[3]
-        state = in_tuple[4]
-        group_name = in_tuple[5]
-        tot_fatalities = in_tuple[6]
+        month = in_tuple[2]
+        day = in_tuple[3]
+        fatalities = in_tuple[4]
 
-        tuples.append((eventID,year,region,country,state,group_name,tot_fatalities))
+        tuples.append((eventID,year,month,day,fatalities))
         
         z = z+1
         
-        if z == 3:
+        if z == 15:
           break
      
     try:  

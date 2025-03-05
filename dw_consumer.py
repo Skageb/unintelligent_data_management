@@ -38,7 +38,7 @@ def dw_consumer():
         
         z = z+1
         
-        if z == 2:
+        if z == 1:
           break
     
     try:  

@@ -172,3 +172,4 @@ cython_debug/
 
 # dataset in csv format
 *.xlsx
+*.csv
