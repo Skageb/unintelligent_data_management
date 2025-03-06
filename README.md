@@ -52,7 +52,7 @@ pip install dash
 Clone repository
 
 ```bash
-git clone xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.git
+git clone https://github.com/Skageb/unintelligent_data_management.git
 ```
 
 Navigate to the root of the project. This should be in the folder that is shared between the host and VM.
