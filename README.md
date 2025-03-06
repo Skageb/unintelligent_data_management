@@ -49,6 +49,7 @@ pip install kafka-python
 pip install mysql-connector-python
 pip install neo4j
 pip install dash
+pip install dash-bootstrap-components
 ```
 
 Clone repository
