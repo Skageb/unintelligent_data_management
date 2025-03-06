@@ -81,8 +81,20 @@ services:
       - neo4j-import:/var/lib/neo4j/import
       - neo4j-logs:/logs
 
+  mongodb:
+    image: mongo:6.0
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: deuser
+      MONGO_INITDB_ROOT_PASSWORD: depassword
+    volumes:
+      - mongodb-data:/data/db
+
 volumes:
   mysql-data:
   neo4j-data:
   neo4j-import:
   neo4j-logs:
+
