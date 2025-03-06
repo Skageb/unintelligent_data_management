@@ -82,19 +82,32 @@ services:
       - neo4j-logs:/logs
 
   mongodb:
-    image: mongo:6.0
+    image: mongo:5.0
+    command: ["mongod", "--bind_ip_all"]
     restart: always
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: deuser
-      MONGO_INITDB_ROOT_PASSWORD: depassword
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
       - mongodb-data:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+      ME_CONFIG_BASICAUTH_USERNAME: deuser
+      ME_CONFIG_BASICAUTH_PASSWORD: depassword
 
 volumes:
   mysql-data:
   neo4j-data:
   neo4j-import:
   neo4j-logs:
-
+  mongodb-data:
