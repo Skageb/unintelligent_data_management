@@ -57,6 +57,8 @@ git clone https://github.com/Skageb/unintelligent_data_management.git
 
 Navigate to the root of the project. This should be in the folder that is shared between the host and VM.
 
+Download the [Global Terrorism Database](https://www.start.umd.edu/data-tools/GTD) and add it to the root of the project as a .csv file.
+
 To start the project the databases need to be prepared
 
 ```bash
