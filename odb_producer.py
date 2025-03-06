@@ -10,14 +10,33 @@ Also, make sure you created a mysql user deuser with password depassword and gra
 import mysql.connector
 from mysql.connector import Error
 from kafka import KafkaProducer, KafkaConsumer
-from time import sleep
 
 def odb_producer():
     # Connect to MySQL database
     odb_conn = None
-    odb_aggregate_query = "SELECT year, sum(fatalities) "\
+    odb_aggregate_query1 = "SELECT year, sum(fatalities) "\
                           " FROM terrorism "\
-                          " GROUP BY year"    
+                          " GROUP BY year"  
+
+    odb_aggregate_query2 = "SELECT country, country_txt, sum(ransom_demanded) AS total_ransom_demanded, sum(ransom_paid) AS total_ransom_paid "\
+                          " FROM terrorism "\
+                          " WHERE ransom=1"\
+                          " GROUP BY country, country_txt"\
+                          " ORDER BY total_ransom_demanded DESC" 
+
+    odb_aggregate_query3 = "SELECT year, city, fatalities, wounded, success, suicide, attacker_group, target_type_txt, weapon_type_txt, motive "\
+                          " FROM terrorism"\
+                          " WHERE country=151"\
+                          " ORDER BY fatalities DESC" 
+
+    odb_aggregate_query4 = "SELECT weapon_type, weapon_type_txt, sum(fatalities) as total_fatalities, sum(wounded) as total_wounded, count(eventid) as occurences "\
+                          " FROM terrorism"\
+                          " GROUP BY weapon_type, weapon_type_txt"\
+                          " ORDER BY occurences DESC"   
+    
+
+ 
+     
                           
     consumer = KafkaConsumer('odb-update-stream',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))                      
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
@@ -26,9 +45,7 @@ def odb_producer():
     for message in consumer:
         print ('\nODB UPDATE EVENT RECEIVED FROM odb-update-stream')
         print ('Producing aggregated tuple for AggrData stream ...')
-        
-        #sleep(1)
-        
+                
         break
                            
     try:  
@@ -40,16 +57,40 @@ def odb_producer():
         
         if odb_conn.is_connected():
                 print('\nConnected to source ODB MySQL database')
-                
+
+        # fatalities   
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_aggregate_query)
-        aggr_tuples = odb_cursor.fetchall()
-        
-        for tuple in aggr_tuples :
-            tuple = (tuple[0], int(tuple[1]))
-            in_string = ''.join(str(tuple)).strip('()')
-            producer.send('AggrData',in_string.encode() )
-            print("\nProduced aggregated tuple: {}".format(tuple))
+        odb_cursor.execute(odb_aggregate_query1)
+        fatalities_tuples = odb_cursor.fetchall()
+        for i in fatalities_tuples:
+            line = "F:" + ",".join(str(x) for x in (i[0], int(i[1])))
+            producer.send('AggrData', line.encode())
+            print("\nProduced aggregated fatalities tuple: {}".format(line))
+
+
+        # ransom
+        odb_cursor.execute(odb_aggregate_query2)
+        ransom_tuples = odb_cursor.fetchall()
+        for i in ransom_tuples:
+            line = "R:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
+            print("\nProduced aggregated ransom tuple: {}".format(line))
+
+        # norway
+        odb_cursor.execute(odb_aggregate_query3)
+        norway_tuples = odb_cursor.fetchall()
+        for i in norway_tuples:
+            line = "N:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
+            print("\nProduced aggregated norway tuple: {}".format(line))
+
+        # norway
+        odb_cursor.execute(odb_aggregate_query4)
+        weapon_tuples = odb_cursor.fetchall()
+        for i in weapon_tuples:
+            line = "W:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
+            print("\nProduced aggregated weapon tuple: {}".format(line))
 
         producer.send('AggrData', b"DONE")
         producer.flush()

@@ -9,17 +9,38 @@ def producer_f(topic,broker_addr):
 
     
     filename = "gtd.csv"
-    
+
+
     try:
-        df = pd.read_csv(filename,usecols=["eventid","iyear","imonth","iday", "nkill"])
-        df = df[20000:25000]
-        df['nkill'] = df['nkill'].fillna(0)
+        df = pd.read_csv(filename, usecols = [
+        "eventid", "iyear", "imonth", "iday", "country", "country_txt", "region", "region_txt",
+        "city", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1",
+        "targtype1_txt", "natlty1", "natlty1_txt", "gname", "motive", "weaptype1", "weaptype1_txt", "nkill", "nwound",
+        "ransom", "ransomamt", "ransompaid"
+    ]
+)
+        df = df[:209000]
+        df['nwound'] = df['nwound'].fillna(0).astype(int)
+        df['nkill'] = df['nkill'].fillna(0).astype(int)
+        df['natlty1'] = df['natlty1'].fillna(0).astype(int)
+        df['ransom'] = df['ransom'].fillna(0).astype(int)
+        df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
+        df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
+
+        #df['success'] = df['success'].fillna(0).astype(int)
+        #df['suicide'] = df['suicide'].fillna(0).astype(int)
+        #df['natlty1'] = df['natlty1'].astype(int)
+        #df['suicide'] = df['suicide'].fillna(0).astype(int)
+        #df['weaptype1'] = df['weaptype1'].fillna(13).astype(int)
+        #df['weaptype1_txt'] = df['weaptype1_txt'].fillna('')
+        #df['ransomamt'] = df['ransomamt'].fillna('')
+        #df['ransompaid'] = df['ransompaid'].fillna('')
 
     except FileNotFoundError:
         print('File not found')
         return
-    except ValueError:
-        print(f'Missing columns: \n {ValueError}')
+    except ValueError as e:
+        print(f'Error {e}')
         return
 
     count = 0
@@ -29,14 +50,17 @@ def producer_f(topic,broker_addr):
     while index < total_rows:
         count += 1
         row = df.iloc[index]
-        line = ",".join(map(str,row.values))
+        line = ",".join("" if v is None else str(v).replace(",", ";") for v in row.values)
         producer.send(topic,line.encode())
         
         #sleep(1)
 
         if not line:
             break
-        print("\nProduced input tuple {}: {}".format(count-1, line))
+        #print("\nProduced input tuple {}: {}".format(count-1, line))
+
+        if index % 10000 == 0:
+            print(f'Produced input number: {count-1}')
 
         index +=1
 
