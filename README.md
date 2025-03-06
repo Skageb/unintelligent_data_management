@@ -16,6 +16,8 @@ To get started. Run a linux virtual machine, and use the following port forwardi
 | kafka    | TCP      | 127.0.0.1     | 29092    |      | 29092     |
 | neo4j    | TCP      | 127.0.0.1     | 7687     |      | 7687      |
 | neo4jClient | TCP   | 127.0.0.1     | 7474     |      | 7474      |
+| MongoDB    | TCP    | 127.0.0.1     | 27017    |      | 27017     |
+| MongoDBClient| TCP  | 127.0.0.1     | 8081     |      | 8081      |
 | ssh    | TCP        | 127.0.0.1     | 2222     |      | 22        |
 
 ### On your virtual machine
