@@ -5,7 +5,7 @@ uri = "neo4j://localhost:7687"
 username = "neo4j"  # or your custom username
 password = "password"
 
-gtd_df = pd.read_csv("gtd.csv", low_memory=False).head(1000)
+gtd_df = pd.read_csv("gtd.csv", low_memory=False).head(1)
 
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
