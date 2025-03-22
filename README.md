@@ -85,5 +85,6 @@ The MySQL databases can be populated using the files
  - dw_consumer.py
  - odb_producer.py
  - odb_consumer.py
+ - neo4j_consumer.py
  - data_producer.py
 
