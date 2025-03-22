@@ -5,9 +5,13 @@ uri = "neo4j://localhost:7687"
 username = "neo4j"  # or your custom username
 password = "password"
 
-gtd_df = pd.read_csv("gtd.csv", low_memory=False).head(3)
+gtd_df = pd.read_csv("gtd.csv", low_memory=False).head(1000)
 
 driver = GraphDatabase.driver(uri, auth=(username, password))
+
+def escape_string(s):
+    return s.replace("'", "") if isinstance(s, str) else ""
+    
 
 def create_terrorism_graph():
     with driver.session() as session:
@@ -20,9 +24,9 @@ def create_terrorism_graph():
             city = row.get('city')
 
             # Handle missing city and escape single quotes in city, country, and attack_type
-            city = city.replace("'", "''") if isinstance(city, str) else ""
-            country = country.replace("'", "''") if isinstance(country, str) else ""
-            attack_type = attack_type.replace("'", "''") if isinstance(attack_type, str) else ""
+            city = escape_string(city) if city else ""
+            country = escape_string(country) if country else ""
+            attack_type = escape_string(attack_type) if attack_type else ""
 
             # Construct the query with proper escaping
             query = (
