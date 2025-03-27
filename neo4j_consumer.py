@@ -60,7 +60,7 @@ def consume_and_insert():
             year = int(fields[1])
             city = escape_string(fields[7])
             country = escape_string(fields[5])
-            attack_type = escape_string(fields[11])
+            attack_type = escape_string(fields[12])
 
             insert_into_neo4j(attack_id, year, city, country, attack_type)
             tuples.append((attack_id, year, city, country, attack_type))

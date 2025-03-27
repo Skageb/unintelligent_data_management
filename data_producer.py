@@ -19,7 +19,8 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df[:209000]
+        df = df.loc[df["iyear"] == 2020]
+        #df = df[:209000]
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
         df['natlty1'] = df['natlty1'].fillna(0).astype(int)
