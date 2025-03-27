@@ -10,7 +10,7 @@ client = MongoClient(MONGO_URI)
 odb_db = client["odb"]
 collection = odb_db["gtd"]
 
-data = list(collection.find().limit(10))
+data = list(collection.find())
 
 for doc in data:
     if '_id' in doc:
@@ -23,7 +23,6 @@ else:
 
 layout = html.Div([
     html.H1('MongoDB Data Landing Page'),
-    html.Div('Displaying the first 10 records from the ODB.gdt collection'),
     dash_table.DataTable(
         data=data,
         columns=columns,
