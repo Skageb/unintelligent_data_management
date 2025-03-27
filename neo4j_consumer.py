@@ -9,24 +9,30 @@ driver = GraphDatabase.driver(uri, auth=(username, password))
 
 def escape_string(s):
     if isinstance(s, str):
-        return s.replace("'", "").replace(",", ";")  # Escape quotes and commas
+        return s.replace("'", "").replace(",", ";")
     return ""
 
-def insert_into_neo4j(attack_id, year, city, country, attack_type):
-    query = (
-        f"MERGE (a:Incident {{id: {attack_id}, year: {year}, city: '{city}', country: '{country}', attack_type: '{attack_type}'}})"
-        f"MERGE (c:Country {{name: '{country}'}})"
-        f"MERGE (t:AttackType {{name: '{attack_type}'}})"
-        f"MERGE (a)-[:HAPPENED_IN]->(c)"
-        f"MERGE (a)-[:OF_TYPE]->(t)"
-    )
-    
+# Cipher query
+def insert_into_neo4j(tx, batch):
+    query = """
+    UNWIND $batch AS event
+    MERGE (a:Incident {id: event.attack_id})
+    SET a.year = event.year, a.city = event.city, a.country = event.country, a.attack_type = event.attack_type
+    MERGE (c:Country {name: event.country})
+    MERGE (t:AttackType {name: event.attack_type})
+    MERGE (a)-[:HAPPENED_IN]->(c)
+    MERGE (a)-[:OF_TYPE]->(t)
+    """
+    tx.run(query, batch=batch)
+
+# Execute database transaction
+def process_batch(batch):
     try:
         with driver.session() as session:
-            session.run(query)
-            print(f"Inserted data for attack_id {attack_id} into Neo4j")
+            session.execute_write(insert_into_neo4j, batch)
+            print(f"Inserted batch of {len(batch)} records into Neo4j")
     except Exception as e:
-        print(f"Error inserting data for attack_id {attack_id}: {e}")
+        print(f"Error inserting batch: {e}")
 
 consumer = KafkaConsumer(
     'Data',
@@ -36,17 +42,17 @@ consumer = KafkaConsumer(
 
 producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
 
-# Consume messages from Kafka and insert them into the Neo4j database
+# Listen to Kafka and insert to neo4j database
 def consume_and_insert():
     print("Consuming Kafka messages...")
 
-    tuples = []
-    
+    batch = []
+
     for message in consumer:
         message_value = message.value.decode('utf-8')
-        
+
         if message_value == "DONE":
-            print("Producer has finished sending data. Processing remaining tuples...")
+            print("Producer finished sending data. Processing remaining batch...")
             break
 
         fields = message_value.split(',')
@@ -55,22 +61,36 @@ def consume_and_insert():
             print(f"Skipping malformed message: {message_value}")
             continue
 
+        # Insert in batches of 1000
         try:
             attack_id = fields[0]
             year = int(fields[1])
             city = escape_string(fields[7])
             country = escape_string(fields[5])
-            attack_type = escape_string(fields[11])
+            attack_type = escape_string(fields[12])
 
-            insert_into_neo4j(attack_id, year, city, country, attack_type)
-            tuples.append((attack_id, year, city, country, attack_type))
+            batch.append({
+                "attack_id": attack_id,
+                "year": year,
+                "city": city,
+                "country": country,
+                "attack_type": attack_type
+            })
+
+            if len(batch) >= 1000:
+                process_batch(batch)
+                batch.clear()
 
         except ValueError as e:
             print(f"Error processing message: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
-    
-    print(f"Total {len(tuples)} tuples processed.")
+
+    # Insert incomplete batch
+    if batch:
+        process_batch(batch)
+
+    print("All messages processed.")
 
 if __name__ == '__main__':
     consume_and_insert()
