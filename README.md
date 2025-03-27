@@ -20,6 +20,20 @@ To get started. Run a linux virtual machine, and use the following port forwardi
 | MongoDBClient| TCP  | 127.0.0.1     | 8081     |      | 8081      |
 | ssh    | TCP        | 127.0.0.1     | 2222     |      | 22        |
 
+### Setting up SSH on your virtual machine
+
+Run the following command to install ssh in your virtual machine:
+
+```bash
+sudo apt-get install openssh-server
+```
+
+You should now be able to access your virtual machine through ssh from your host machine terminal with the command:
+```bash
+ssh -p 2222 <VM-username>@localhost
+```
+Replace \<VM-username\> with the username you selected on your virtual machine during setup.
+
 ### On your virtual machine
 
 ```bash
@@ -69,7 +83,7 @@ To start the project the databases need to be prepared
 python prepare_odb.py
 python prepare_dw.py
 python prepare_neo4j.py
-python prepare_odb_mongodb.py
+python prepare_mongo.py
 ```
 
 Starting the application
@@ -85,5 +99,6 @@ The MySQL databases can be populated using the files
  - dw_consumer.py
  - odb_producer.py
  - odb_consumer.py
+ - neo4j_consumer.py
  - data_producer.py
 
