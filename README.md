@@ -20,6 +20,20 @@ To get started. Run a linux virtual machine, and use the following port forwardi
 | MongoDBClient| TCP  | 127.0.0.1     | 8081     |      | 8081      |
 | ssh    | TCP        | 127.0.0.1     | 2222     |      | 22        |
 
+### Setting up SSH on your virtual machine
+
+Run the following command to install ssh in your virtual machine:
+
+```bash
+sudo apt-get install openssh-server
+```
+
+You should now be able to access your virtual machine through ssh from your host machine terminal with the command:
+```bash
+ssh -p 2222 <VM-username>@localhost
+```
+Replace \<VM-username\> with the username you selected on your virtual machine during setup.
+
 ### On your virtual machine
 
 ```bash
