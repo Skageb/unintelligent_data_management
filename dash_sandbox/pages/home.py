@@ -21,7 +21,6 @@ layout = html.Div([
 )
 def insert_data(n_clicks):
     if n_clicks > 0:
-        print(n_clicks)
         insert = 'True'
         producer_f(data_pipe, broker_addr, insert)
         return f'Data inserted'
