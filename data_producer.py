@@ -3,7 +3,7 @@ from kafka import KafkaProducer
 from time import sleep
 import pandas as pd
 
-def producer_f(topic,broker_addr):
+def producer_f(topic,broker_addr, insert):
 
     producer = KafkaProducer(bootstrap_servers=broker_addr,api_version=(2,0,2))
 
@@ -19,23 +19,17 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df.loc[df["iyear"] == 2020]
-        #df = df[:209000]
+        if insert == "True":
+            df = df.loc[df["iyear"] == 2020]
+        else: 
+            df = df.loc[df["iyear"] == 2019]
+
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
         df['natlty1'] = df['natlty1'].fillna(0).astype(int)
         df['ransom'] = df['ransom'].fillna(0).astype(int)
         df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
-
-        #df['success'] = df['success'].fillna(0).astype(int)
-        #df['suicide'] = df['suicide'].fillna(0).astype(int)
-        #df['natlty1'] = df['natlty1'].astype(int)
-        #df['suicide'] = df['suicide'].fillna(0).astype(int)
-        #df['weaptype1'] = df['weaptype1'].fillna(13).astype(int)
-        #df['weaptype1_txt'] = df['weaptype1_txt'].fillna('')
-        #df['ransomamt'] = df['ransomamt'].fillna('')
-        #df['ransompaid'] = df['ransompaid'].fillna('')
 
     except FileNotFoundError:
         print('File not found')
@@ -54,23 +48,25 @@ def producer_f(topic,broker_addr):
         line = ",".join("" if v is None else str(v).replace(",", ";") for v in row.values)
         producer.send(topic,line.encode())
         
-        #sleep(1)
-
         if not line:
             break
-        #print("\nProduced input tuple {}: {}".format(count-1, line))
 
-        if index % 10000 == 0:
+        if index % 1000 == 0:
             print(f'Produced input number: {count-1}')
 
         index +=1
 
-    producer.send(topic, b"DONE")
-    producer.flush()
-    print("\nDone with producing data to topic {}.".format(topic))
+    if insert == "True":
+        producer.send(topic, b"DONE")
+        producer.flush()
+        print("\nDone with producing data to topic {}.".format(topic))
 
-data_pipe = 'Data'
-broker_addr = '127.0.0.1:29092'
 
-producer_f(data_pipe, broker_addr)
+if __name__ == "__main__":
+    insert = "False"
+    data_pipe = 'Data'
+    broker_addr = '127.0.0.1:29092'
+
+    producer_f(data_pipe, broker_addr, insert)
+
 
