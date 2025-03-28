@@ -28,6 +28,8 @@ def odb_consumer():
     print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
     
     tuples = [] 
+    total_inserted = 0
+    batch_size = 1000
 
     for message in consumer:
         in_string = message.value.decode()
@@ -37,9 +39,6 @@ def odb_consumer():
             break
 
         in_tuple = in_string.strip('"').split(',')
-        #print ('\nInput Tuple Received: {}'.format(in_tuple))
-        if len(tuples)%10000 == 0:
-            print(f'Input tuple received: {len(tuples)}')
                 
         eventID = in_tuple[0]
         year = in_tuple[1]
@@ -82,29 +81,45 @@ def odb_consumer():
             fatalities, wounded,
             ransom, ransom_demanded, ransom_paid
         ))
-     
-    try:  
-        conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
+
+        if len(tuples) == batch_size:
+            try:
+                if conn is None or not conn.is_connected():
+                    conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
                                   port=13306, 
                                   database = 'odb',
                                   user='deuser',
                                   password='depassword')
-        if conn.is_connected():
-                print('\nConnected to destination ODB MySQL database')
+                cursor = conn.cursor()
+                cursor.executemany(query, tuples)
+                conn.commit()
+                total_inserted += len(tuples)
+                print(f'Inserted {total_inserted} rows so far...')
+                tuples.clear()
+            except Error as e:
+                print(f'Batch insert failed: {e}')
+                break
         
-        cursor = conn.cursor()
-        
-        for tuple in tuples:
-            cursor.execute(query,tuple)
-            
-        conn.commit()
-        
+    if tuples:
+        try:
+            if conn is None or not conn.is_connected():
+                conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
+                                port=13306, 
+                                database = 'odb',
+                                user='deuser',
+                                password='depassword')
+            cursor = conn.cursor()
+            cursor.executemany(query, tuples)
+            conn.commit()
+            total_inserted += len(tuples)
+            print(f'Final batch inserted. Total rows inserted: {total_inserted}')
+        except Error as e:
+            print(f'Final insert failed: {e}')
+
+    try:  
         cursor.execute("SELECT count(*) FROM terrorism")
         res = cursor.fetchone()
     
-        print('ODB is populated: {} new tuples are inserted'.format(len(tuples)))
-        print('                  {} total tuples are inserted'.format(res[0]))    
-                
         m = 'odb update event'   
         producer.send('odb-update-stream', m.encode())
         print('\nODB UPDATE EVENT SENT TO ODB UPDATE STREAM')

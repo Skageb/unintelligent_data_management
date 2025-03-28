@@ -65,6 +65,9 @@ pip install neo4j
 pip install dash
 pip install pymongo
 pip install dash-bootstrap-components
+pip install fastapi
+pip install 'uvicorn[standard]'
+pip install pycountry
 ```
 
 Clone repository
@@ -86,13 +89,20 @@ python prepare_neo4j.py
 python prepare_mongo.py
 ```
 
-Starting the application
+The application consists of a dash frontend with a fastapi endpoint to make database requests. The api must be up and running for the application to work.
 
+Run the API in a terminal:
+```bash
+cd dash_sandbox/
+uvicorn db_api:app --reload --port 5001
+```
+
+When the API is running, open another terminal and run:
 ```bash
 python dash_sandbox/app.py
 ```
 
-The application starts running at localhost:8080
+This starts the application running at localhost:8080
 
 The MySQL databases can be populated using the files
 
@@ -100,5 +110,6 @@ The MySQL databases can be populated using the files
  - odb_producer.py
  - odb_consumer.py
  - neo4j_consumer.py
+ - mongo_consumer.py
  - data_producer.py
 
