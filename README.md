@@ -67,6 +67,7 @@ pip install pymongo
 pip install dash-bootstrap-components
 pip install fastapi
 pip install 'uvicorn[standard]'
+pip install pycountry
 ```
 
 Clone repository
