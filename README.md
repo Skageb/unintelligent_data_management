@@ -110,5 +110,6 @@ The MySQL databases can be populated using the files
  - odb_producer.py
  - odb_consumer.py
  - neo4j_consumer.py
+ - mongo_consumer.py
  - data_producer.py
 
