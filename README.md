@@ -83,7 +83,7 @@ To start the project the databases need to be prepared
 python prepare_odb.py
 python prepare_dw.py
 python prepare_neo4j.py
-python prepare_odb_mongo.py
+python prepare_mongo.py
 ```
 
 Starting the application
