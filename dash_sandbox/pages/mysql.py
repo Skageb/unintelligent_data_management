@@ -29,12 +29,36 @@ def create_globe_plot(df):
     country_counts.columns = ['country', 'count']
     country_counts['iso_code'] = country_counts['country'].apply(country_to_iso)
 
-    fig = px.choropleth(country_counts, locations='iso_code', color='count', hover_data=['country', 'count'])
+    # Get list of countries already in the DataFrame
+    present_countries = country_counts['country'].tolist()
+
+    # Prepare rows for missing countries
+    missing_rows = []
+
+    for c in pycountry.countries:
+        if c.name not in present_countries:
+            missing_rows.append({
+                'country': c.name,
+                'count': 0,
+                'iso_code': c.alpha_3
+            })
+
+    # Append missing countries
+    if missing_rows:
+        country_counts = pd.concat([country_counts, pd.DataFrame(missing_rows)], ignore_index=True)
+
+    # Optional: sort alphabetically or by iso_code
+    country_counts = country_counts.sort_values(by='country').reset_index(drop=True)
+
+    fig = px.choropleth(country_counts, locations='iso_code', color='count', hover_data=['country', 'count'], color_continuous_scale = ["#fff5eb", "#fd8d3c", "#f03b20", "#bd0026", "#800026"])
 
     fig.update_geos(projection_type='orthographic')
 
+    
+
     fig.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=5, r=5, t=5, b=5),
+        
     )
 
     # Show the figure
@@ -43,12 +67,21 @@ def create_globe_plot(df):
 df_init = fetch_data_from_api()
 
 layout = dbc.Container([html.Div([
-        html.H1("Terrorism Database"),
-
+        
+        html.H1("Number of Terror Attacks in Each Country"),
         dcc.Store(id='df', data=df_init.to_dict('records')),
         dcc.Graph(id='globe-graph'),
-
+        html.H1("Find a Scoop"),
+        html.Article('Use this tool to find a news story on an attack that is unique based on the selected category.'),
+        dbc.Row(children=[
+            dbc.Input(),
+            dbc.Button('New Attack'),
+            dbc.Button('Generate Report')
+        ]
+        ),
+        html.H1("Terrorism Database"),
         # Display the table
+        
         dash_table.DataTable(
             id='terrorism-table',
             columns=[{"name": col, "id": col} for col in df_init.columns],
