@@ -1,12 +1,7 @@
 import dash
 from dash import html, Output, Input
-#from data_producer import producer_f
 
 dash.register_page(__name__, path='/')
-
-data_pipe = 'Data'
-broker_addr = '127.0.0.1:29092'
-insert = 'False'
 
 layout = html.Div([
     html.H1('This is our Home page'),
