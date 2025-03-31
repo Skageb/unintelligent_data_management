@@ -36,6 +36,35 @@ def odb_consumer():
 
         if in_string == "DONE":
             print("\nProducer has finished sending data. Processing remaining tuples...")
+
+            if tuples:
+                try:
+                    if conn is None or not conn.is_connected():
+                        conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
+                                        port=13306, 
+                                        database = 'odb',
+                                        user='deuser',
+                                        password='depassword')
+                    cursor = conn.cursor()
+                    cursor.executemany(query, tuples)
+                    conn.commit()
+                    total_inserted += len(tuples)
+                    print(f'Final batch inserted. Total rows inserted: {total_inserted}')
+                    cursor.execute("SELECT count(*) FROM terrorism")
+                    res = cursor.fetchone()
+                
+                    m = 'odb update event'   
+                    producer.send('odb-update-stream', m.encode())
+                    print('\nODB UPDATE EVENT SENT TO ODB UPDATE STREAM')
+                    producer.flush()
+
+                except Error as e:
+                    print(f'Final insert failed: {e}')
+                        
+                finally:
+                    if conn is not None and conn.is_connected():
+                        cursor.close()
+                        conn.close()
             break
 
         in_tuple = in_string.strip('"').split(',')
@@ -99,41 +128,9 @@ def odb_consumer():
             except Error as e:
                 print(f'Batch insert failed: {e}')
                 break
-        
-    if tuples:
-        try:
-            if conn is None or not conn.is_connected():
-                conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
-                                port=13306, 
-                                database = 'odb',
-                                user='deuser',
-                                password='depassword')
-            cursor = conn.cursor()
-            cursor.executemany(query, tuples)
-            conn.commit()
-            total_inserted += len(tuples)
-            print(f'Final batch inserted. Total rows inserted: {total_inserted}')
-        except Error as e:
-            print(f'Final insert failed: {e}')
 
-    try:  
-        cursor.execute("SELECT count(*) FROM terrorism")
-        res = cursor.fetchone()
-    
-        m = 'odb update event'   
-        producer.send('odb-update-stream', m.encode())
-        print('\nODB UPDATE EVENT SENT TO ODB UPDATE STREAM')
-        producer.flush()
-        
-            
-    except Error as e:
-        print(e)
-        
-    finally:
-        if conn is not None and conn.is_connected():
-            cursor.close()
-            conn.close()
             
 if __name__ == '__main__':
-    odb_consumer()
+    while True:
+        odb_consumer()
     
