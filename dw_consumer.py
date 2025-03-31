@@ -17,14 +17,14 @@ def dw_consumer():
     dw_load_query1 = "INSERT INTO fatalities(year,fatalities) " \
                      "VALUES(%s,%s)"
     
-    dw_load_query2 = "INSERT INTO ransom_by_country(country, country_txt, ransom_demanded, ransom_paid) " \
-                     "VALUES(%s,%s,%s,%s)"
+    dw_load_query2 = "INSERT INTO ransom_by_country(year, country, country_txt, ransom_demanded, ransom_paid) " \
+                     "VALUES(%s,%s,%s,%s,%s)"
     
     dw_load_query3 = "INSERT INTO terror_in_norway(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive) " \
                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     
-    dw_load_query4 = "INSERT INTO weapon_type(weapon_type, weapon_type_desc, fatalities, wounded, occurences) " \
-                     "VALUES(%s,%s,%s,%s,%s)"
+    dw_load_query4 = "INSERT INTO weapon_type(year, weapon_type, weapon_type_desc, fatalities, wounded, occurences) " \
+                     "VALUES(%s,%s,%s,%s,%s,%s)"
     
     
     consumer = KafkaConsumer('AggrData',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
@@ -99,12 +99,13 @@ def dw_consumer():
         elif in_string.startswith("R:"):
             data = in_string[2:].split(',')
             try:
-                country = data[0].strip()
-                country_txt = data[1].strip()
-                total_ransom_demanded = int(data[2].strip())
-                total_ransom_paid = int(data[3].strip())
-                ransom_tuples.append((country, country_txt, total_ransom_demanded, total_ransom_paid))
-                print("\nRansom Tuple Received: ({}, {}, {}, {})".format(country, country_txt, total_ransom_demanded, total_ransom_paid))
+                year = data[0].strip()
+                country = data[1].strip()
+                country_txt = data[2].strip()
+                total_ransom_demanded = int(data[3].strip())
+                total_ransom_paid = int(data[4].strip())
+                ransom_tuples.append((year, country, country_txt, total_ransom_demanded, total_ransom_paid))
+                print("\nRansom Tuple Received: ({}, {}, {}, {}, {})".format(year, country, country_txt, total_ransom_demanded, total_ransom_paid))
             except Exception as e:
                 print("Error processing ransom data:", e)
         elif in_string.startswith("N:"):
@@ -127,13 +128,14 @@ def dw_consumer():
         elif in_string.startswith("W:"):
             data = in_string[2:].split(',')
             try:
-                weapon_type = int(data[0].strip())
-                weapon_type_txt = data[1].strip()
-                fatalities = int(data[2].strip())
-                wounded = int(data[3].strip())
-                eventid = int(data[4].strip())
-                weapon_tuples.append((weapon_type, weapon_type_txt, fatalities, wounded,eventid))
-                print("\nWeapon Tuple Received: ({}, {}, {}, {}, {})".format(weapon_type, weapon_type_txt, fatalities, wounded,eventid))
+                year = data[0].strip()
+                weapon_type = int(data[1].strip())
+                weapon_type_txt = data[2].strip()
+                fatalities = int(data[3].strip())
+                wounded = int(data[4].strip())
+                eventid = int(data[5].strip())
+                weapon_tuples.append((year, weapon_type, weapon_type_txt, fatalities, wounded,eventid))
+                print("\nWeapon Tuple Received: ({}, {}, {}, {}, {}, {})".format(year, weapon_type, weapon_type_txt, fatalities, wounded,eventid))
             except Exception as e:
                 print("Error processing ransom data:", e)
     
