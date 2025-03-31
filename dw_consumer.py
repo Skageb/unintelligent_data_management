@@ -41,6 +41,50 @@ def dw_consumer():
 
         if in_string == "DONE":
             print("\nProducer has finished sending data. Processing remaining tuples...")
+            try:  
+                dw_conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
+                                        port=23306, 
+                                        database = 'dw',
+                                        user='deuser',
+                                        password='depassword')
+                
+                if dw_conn.is_connected():
+                        print('\nConnected to destination DW MySQL database')
+                
+                dw_cursor = dw_conn.cursor()
+            
+                dw_cursor.executemany(dw_load_query1, fatalities_tuples)
+                dw_cursor.executemany(dw_load_query2, ransom_tuples)
+                dw_cursor.executemany(dw_load_query3, norway_tuples)
+                dw_cursor.executemany(dw_load_query4, weapon_tuples)
+                
+                dw_conn.commit()
+                
+                dw_cursor.execute("SELECT count(*) FROM fatalities")
+                fatalities_count = dw_cursor.fetchone()[0]
+
+                dw_cursor.execute("SELECT count(*) FROM ransom_by_country")
+                ransom_count = dw_cursor.fetchone()[0]
+
+                dw_cursor.execute("SELECT count(*) FROM terror_in_norway")
+                norway_count = dw_cursor.fetchone()[0]
+
+                dw_cursor.execute("SELECT count(*) FROM weapon_type")
+                weapon_count = dw_cursor.fetchone()[0]
+
+                print('DW is loaded: {} total fatalities records inserted'.format(fatalities_count))
+                print('              {} total ransom records are inserted'.format(ransom_count))
+                print('              {} total norway records are inserted'.format(norway_count))
+                print('              {} total weapon records are inserted'.format(weapon_count))
+
+                    
+            except Error as e:
+                print(e)
+                
+            finally:
+                if dw_conn is not None and dw_conn.is_connected():
+                    dw_cursor.close()
+                    dw_conn.close()
             break
 
         if in_string.startswith("F:"):
@@ -92,53 +136,8 @@ def dw_consumer():
                 print("\nWeapon Tuple Received: ({}, {}, {}, {}, {})".format(weapon_type, weapon_type_txt, fatalities, wounded,eventid))
             except Exception as e:
                 print("Error processing ransom data:", e)
-
     
-    try:  
-        dw_conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
-                                  port=23306, 
-                                  database = 'dw',
-                                  user='deuser',
-                                  password='depassword')
-        
-        if dw_conn.is_connected():
-                print('\nConnected to destination DW MySQL database')
-        
-        dw_cursor = dw_conn.cursor()
-    
-        dw_cursor.executemany(dw_load_query1, fatalities_tuples)
-        dw_cursor.executemany(dw_load_query2, ransom_tuples)
-        dw_cursor.executemany(dw_load_query3, norway_tuples)
-        dw_cursor.executemany(dw_load_query4, weapon_tuples)
-        
-        dw_conn.commit()
-        
-        dw_cursor.execute("SELECT count(*) FROM fatalities")
-        fatalities_count = dw_cursor.fetchone()[0]
-
-        dw_cursor.execute("SELECT count(*) FROM ransom_by_country")
-        ransom_count = dw_cursor.fetchone()[0]
-
-        dw_cursor.execute("SELECT count(*) FROM terror_in_norway")
-        norway_count = dw_cursor.fetchone()[0]
-
-        dw_cursor.execute("SELECT count(*) FROM weapon_type")
-        weapon_count = dw_cursor.fetchone()[0]
-
-        print('DW is loaded: {} total fatalities records inserted'.format(fatalities_count))
-        print('              {} total ransom records are inserted'.format(ransom_count))
-        print('              {} total norway records are inserted'.format(norway_count))
-        print('              {} total weapon records are inserted'.format(weapon_count))
-
-            
-    except Error as e:
-        print(e)
-        
-    finally:
-        if dw_conn is not None and dw_conn.is_connected():
-            dw_cursor.close()
-            dw_conn.close()    
-            
 if __name__ == '__main__':
-    dw_consumer()
+    while True:
+        dw_consumer()
     

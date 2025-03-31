@@ -104,5 +104,6 @@ def odb_producer():
             odb_conn.close()
             
 if __name__ == '__main__':
-    odb_producer()
+    while True:
+        odb_producer()
     
