@@ -18,10 +18,10 @@ def odb_producer():
                           " FROM terrorism "\
                           " GROUP BY year"  
 
-    odb_aggregate_query2 = "SELECT country, country_txt, sum(ransom_demanded) AS total_ransom_demanded, sum(ransom_paid) AS total_ransom_paid "\
+    odb_aggregate_query2 = "SELECT year, country, country_txt, sum(ransom_demanded) AS total_ransom_demanded, sum(ransom_paid) AS total_ransom_paid "\
                           " FROM terrorism "\
                           " WHERE ransom=1"\
-                          " GROUP BY country, country_txt"\
+                          " GROUP BY year, country, country_txt"\
                           " ORDER BY total_ransom_demanded DESC" 
 
     odb_aggregate_query3 = "SELECT year, city, fatalities, wounded, success, suicide, attacker_group, target_type_txt, weapon_type_txt, motive "\
@@ -29,9 +29,9 @@ def odb_producer():
                           " WHERE country=151"\
                           " ORDER BY fatalities DESC" 
 
-    odb_aggregate_query4 = "SELECT weapon_type, weapon_type_txt, sum(fatalities) as total_fatalities, sum(wounded) as total_wounded, count(eventid) as occurences "\
+    odb_aggregate_query4 = "SELECT year, weapon_type, weapon_type_txt, sum(fatalities) as total_fatalities, sum(wounded) as total_wounded, count(eventid) as occurences "\
                           " FROM terrorism"\
-                          " GROUP BY weapon_type, weapon_type_txt"\
+                          " GROUP BY year, weapon_type, weapon_type_txt"\
                           " ORDER BY occurences DESC"   
     
 

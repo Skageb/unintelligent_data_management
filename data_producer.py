@@ -19,8 +19,8 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df.loc[df["iyear"] == 2020]
-        #df = df[:209000]
+        df = df.loc[(df["iyear"] >= 2015) & (df["iyear"] <= 2019)]
+        
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
         df['natlty1'] = df['natlty1'].fillna(0).astype(int)
@@ -28,14 +28,6 @@ def producer_f(topic,broker_addr):
         df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
 
-        #df['success'] = df['success'].fillna(0).astype(int)
-        #df['suicide'] = df['suicide'].fillna(0).astype(int)
-        #df['natlty1'] = df['natlty1'].astype(int)
-        #df['suicide'] = df['suicide'].fillna(0).astype(int)
-        #df['weaptype1'] = df['weaptype1'].fillna(13).astype(int)
-        #df['weaptype1_txt'] = df['weaptype1_txt'].fillna('')
-        #df['ransomamt'] = df['ransomamt'].fillna('')
-        #df['ransompaid'] = df['ransompaid'].fillna('')
 
     except FileNotFoundError:
         print('File not found')
@@ -60,7 +52,7 @@ def producer_f(topic,broker_addr):
             break
         #print("\nProduced input tuple {}: {}".format(count-1, line))
 
-        if index % 10000 == 0:
+        if index % 1000 == 0:
             print(f'Produced input number: {count-1}')
 
         index +=1

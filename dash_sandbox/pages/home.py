@@ -1,6 +1,6 @@
 import dash
 from dash import html, Output, Input
-from data_producer import producer_f
+#from data_producer import producer_f
 
 dash.register_page(__name__, path='/')
 
@@ -21,7 +21,5 @@ layout = html.Div([
 )
 def insert_data(n_clicks):
     if n_clicks > 0:
-        insert = 'True'
-        producer_f(data_pipe, broker_addr, insert)
-        return f'Data inserted'
+        return f'Prank btn. Number of times pranked: {n_clicks}'
     return ""
