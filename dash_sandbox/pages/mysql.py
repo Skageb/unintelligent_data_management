@@ -139,6 +139,7 @@ def category_input_response(category, df_dict):
 
 @callback(
     Output('attack-report', 'children'),
+    Output('attack-report', 'style'),
     State('df', 'data'),
     State('category-input', 'value'),
     State('scoop-search-option', 'value'),
@@ -161,6 +162,8 @@ def generate_report_button_response(df_dict, category, search_option, full_repor
     if n_clicks < 1:
         return dash.no_update
     
+    style = {'backgroundColor': '#f9f9f9', 'padding': '10px', 'borderRadius': '8px', 'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'}
+    
     #Get most frequent or least frequent value:
     if df.dtypes[category] == 'object':
         value_counts = df[category].value_counts().sort_index().reset_index()
@@ -168,23 +171,23 @@ def generate_report_button_response(df_dict, category, search_option, full_repor
         sorted_counts = value_counts.sort_values('count', ascending=search_option)
         category_value = sorted_counts.iloc[(n_clicks-1)%len(sorted_counts)]['value']
         if report_format == 'short':
-            return [html.H5(f'Attack found from category {category}, value: {category_value}')]
+            return [html.H5(f'Attack found from category {category}, value: {category_value}')], style
         elif report_format == 'full':
             result_df = df.loc[df[category] == category_value]
             row = result_df.sample(n=1).iloc[0]
-            return create_HTML_report(row)
+            return create_HTML_report(row), style
         
     
     #Get highest or lowest value
     elif df.dtypes[category] == 'int64':
         sorted_df = df.sort_values(category, ascending=search_option)
-        category_value = sorted_df.iloc[(n_clicks-1)%len(sorted_df)][category]
+        category_value = sorted_df.iloc[0][category]
         if report_format =='short':
-            return [html.H5(f'Attack found from category {category}, value: {category_value}')]
+            return [html.H5(f'Attack found from category {category}, value: {category_value}')], style
         elif report_format == 'full':
             result_df = df.loc[df[category] == category_value]
             row = result_df.sample(n=1).iloc[0]
-            return create_HTML_report(row)
+            return create_HTML_report(row), style
 
 def create_HTML_report(row):
     
@@ -200,8 +203,9 @@ def create_HTML_report(row):
     date =  pretty_date(row['year'], row['month'], row['day'])
 
     children_object = [
-        html.H1(headline),
-        html.H5(f'Date of Attack: {date}')
+        html.H2(headline),
+        html.H5(f'Date of Attack: {date}'),
+        html.Hr()
     ]
     body = f''
     if row['ransom']:
@@ -259,13 +263,17 @@ def pretty_date(year, month, day):
     
         
     form = "%dth of %B, %Y"
-    if str(day)[-1] == '1':
+    if str(day)[-1] == '1' and str(day) != '11':
         form = "%dst of %B, %Y"
-    elif str(day)[-1] == '2':
+    elif str(day)[-1] == '2' and str(day) != '12':
         form = "%dnd of %B, %Y"
-    if str(day)[0] == '0':
-        form = form[1:]
+    elif str(day)[-1] == '3' and str(day) != '13':
+        form = "%drd of %B, %Y"
+    
 
     formatted_date = date_obj.strftime(form)  # e.g. '24th of December'
+
+    if formatted_date[0] == '0':
+        formatted_date = formatted_date[1:]
 
     return formatted_date
