@@ -32,9 +32,8 @@ def dw_consumer():
     dw_load_query6 = "INSERT INTO dim_attack_type(attack_code, attack_desc) " \
                       "VALUES(%s,%s)"
     
-    # dw_load_query7 = "INSERT INTO fact_terror_event(event_id, date_id, location_id, attack_type_id, target_id, perpetrator_id, " \
-    # "weapon_type_id, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid) " \
-    #                   "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    dw_load_query7 = "INSERT INTO fact_terror_event(event_id, latitude, longitude, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid) " \
+                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     
     
     
@@ -62,7 +61,7 @@ def dw_consumer():
     dim_weapon_type_tuples = []
     dim_attack_type_tuples = []
 
-    #fact_terror_event_tuples = []
+    fact_terror_event_tuples = []
 
     # fatalities_tuples = [] 
     # ransom_tuples = []
@@ -93,7 +92,7 @@ def dw_consumer():
                 dw_cursor.executemany(dw_load_query5, dim_weapon_type_tuples)
                 dw_cursor.executemany(dw_load_query6, dim_attack_type_tuples)
 
-                #dw_cursor.executemany(dw_load_query7, fact_terror_event_tuples)
+                dw_cursor.executemany(dw_load_query7, fact_terror_event_tuples)
 
 
 
@@ -122,8 +121,8 @@ def dw_consumer():
                 dw_cursor.execute("SELECT count(*) FROM dim_attack_type")
                 attack_count = dw_cursor.fetchone()[0]
 
-                # dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
-                # fact_count = dw_cursor.fetchone()[0]
+                dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
+                fact_count = dw_cursor.fetchone()[0]
                 
                 # dw_cursor.execute("SELECT count(*) FROM fatalities")
                 # fatalities_count = dw_cursor.fetchone()[0]
@@ -217,6 +216,24 @@ def dw_consumer():
                 attack_code = int(data[0].strip())
                 attack_desc = data[1].strip()
                 dim_attack_type_tuples.append((attack_code, attack_desc))
+            except Exception as e:
+                print("Error processing date:", e)
+
+        # fact table
+        elif in_string.startswith("F:"):
+            data = in_string[2:].split(',')
+            try: 
+                event_id = data[0].strip()
+                latitude = float(data[1].strip())
+                longitude = float(data[2].strip())
+                suicide = int(data[3].strip())
+                success = int(data[4].strip())
+                fatalities = int(data[5].strip())
+                wounded = int(data[6].strip())
+                ransom_demanded = int(data[7].strip())
+                ransom_paid = int(data[8].strip())
+
+                fact_terror_event_tuples.append((event_id, latitude, longitude, suicide, success, fatalities, wounded, ransom_demanded, ransom_paid))
             except Exception as e:
                 print("Error processing date:", e)
 

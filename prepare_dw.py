@@ -25,10 +25,9 @@ def prepare_dw():
     create_table6 = "CREATE TABLE IF NOT EXISTS dim_attack_type (attack_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, attack_code INT, attack_desc VARCHAR(300))"
 
     # fact table
-    create_table7 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date_id INT NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, location_id INT NOT NULL, attack_type_id INT NOT NULL, \
-        target_id INT NOT NULL, perpetrator_id INT NOT NULL, weapon_type_id INT NOT NULL, success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
-        FOREIGN KEY (date_id) REFERENCES dim_date(date_id), FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude), FOREIGN KEY (attack_type_id) REFERENCES dim_attack_type(attack_type_id), \
-        FOREIGN KEY (target_id) REFERENCES dim_target(target_id), FOREIGN KEY (perpetrator_id) REFERENCES dim_perpetrator(perpetrator_id), FOREIGN KEY (weapon_type_id) REFERENCES dim_weapon_type(weapon_type_id))"
+    create_table7 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, \
+        success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
+        FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude))"
 
     # summary table
 
