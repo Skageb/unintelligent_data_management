@@ -3,7 +3,7 @@ from kafka import KafkaProducer
 from time import sleep
 import pandas as pd
 
-def producer_f(topic,broker_addr, insert):
+def producer_f(topic,broker_addr):
 
     producer = KafkaProducer(bootstrap_servers=broker_addr,api_version=(2,0,2))
 
@@ -19,17 +19,15 @@ def producer_f(topic,broker_addr, insert):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        if insert == "True":
-            df = df.loc[df["iyear"] == 2020]
-        else: 
-            df = df.loc[df["iyear"] == 2019]
-
+        df = df.loc[(df["iyear"] >= 2015) & (df["iyear"] <= 2019)]
+        
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
         df['natlty1'] = df['natlty1'].fillna(0).astype(int)
         df['ransom'] = df['ransom'].fillna(0).astype(int)
         df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
+
 
     except FileNotFoundError:
         print('File not found')
@@ -48,25 +46,22 @@ def producer_f(topic,broker_addr, insert):
         line = ",".join("" if v is None else str(v).replace(",", ";") for v in row.values)
         producer.send(topic,line.encode())
         
+        #sleep(1)
+
         if not line:
             break
+        #print("\nProduced input tuple {}: {}".format(count-1, line))
 
         if index % 1000 == 0:
             print(f'Produced input number: {count-1}')
 
         index +=1
 
-    if insert == "True":
-        producer.send(topic, b"DONE")
-        producer.flush()
-        print("\nDone with producing data to topic {}.".format(topic))
+    producer.send(topic, b"DONE")
+    producer.flush()
+    print("\nDone with producing data to topic {}.".format(topic))
 
+data_pipe = 'Data'
+broker_addr = '127.0.0.1:29092'
 
-if __name__ == "__main__":
-    insert = "False"
-    data_pipe = 'Data'
-    broker_addr = '127.0.0.1:29092'
-
-    producer_f(data_pipe, broker_addr, insert)
-
-
+producer_f(data_pipe, broker_addr)

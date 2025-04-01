@@ -14,26 +14,46 @@ from kafka import KafkaProducer, KafkaConsumer
 def odb_producer():
     # Connect to MySQL database
     odb_conn = None
-    odb_aggregate_query1 = "SELECT year, sum(fatalities) "\
-                          " FROM terrorism "\
-                          " GROUP BY year"  
 
-    odb_aggregate_query2 = "SELECT country, country_txt, sum(ransom_demanded) AS total_ransom_demanded, sum(ransom_paid) AS total_ransom_paid "\
-                          " FROM terrorism "\
-                          " WHERE ransom=1"\
-                          " GROUP BY country, country_txt"\
-                          " ORDER BY total_ransom_demanded DESC" 
+    odb_aggregate_query1 = """
+    SELECT year,
+           SUM(SUM(fatalities)) OVER (ORDER BY year) AS cumulative_fatalities
+    FROM terrorism
+    GROUP BY year
+    ORDER BY year
+"""
 
-    odb_aggregate_query3 = "SELECT year, city, fatalities, wounded, success, suicide, attacker_group, target_type_txt, weapon_type_txt, motive "\
-                          " FROM terrorism"\
-                          " WHERE country=151"\
-                          " ORDER BY fatalities DESC" 
+    odb_aggregate_query2 = """
+    SELECT year,
+           country,
+           country_txt,
+           SUM(SUM(ransom_demanded)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_demanded,
+           SUM(SUM(ransom_paid)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_paid
+    FROM terrorism
+    WHERE ransom = 1
+    GROUP BY year, country, country_txt
+    ORDER BY country, year
+""" 
 
-    odb_aggregate_query4 = "SELECT weapon_type, weapon_type_txt, sum(fatalities) as total_fatalities, sum(wounded) as total_wounded, count(eventid) as occurences "\
-                          " FROM terrorism"\
-                          " GROUP BY weapon_type, weapon_type_txt"\
-                          " ORDER BY occurences DESC"   
-    
+    odb_aggregate_query3 = """
+    SELECT year, city, fatalities, wounded, success, suicide,
+           attacker_group, target_type_txt, weapon_type_txt, motive
+    FROM terrorism
+    WHERE country = 151
+    ORDER BY fatalities DESC
+""" 
+
+    odb_aggregate_query4 = """
+    SELECT year,
+           weapon_type,
+           weapon_type_txt,
+           SUM(SUM(fatalities)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_fatalities,
+           SUM(SUM(wounded)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_wounded,
+           SUM(COUNT(eventid)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_occurences
+    FROM terrorism
+    GROUP BY year, weapon_type, weapon_type_txt
+    ORDER BY weapon_type, year
+"""
 
  
      
@@ -104,5 +124,6 @@ def odb_producer():
             odb_conn.close()
             
 if __name__ == '__main__':
-    odb_producer()
+    while True:
+        odb_producer()
     

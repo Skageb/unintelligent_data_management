@@ -53,6 +53,11 @@ def consume_and_insert():
 
         if message_value == "DONE":
             print("Producer finished sending data. Processing remaining batch...")
+            # Insert incomplete batch
+            if batch:
+                process_batch(batch)
+
+            print("All messages processed.")
             break
 
         fields = message_value.split(',')
@@ -86,11 +91,6 @@ def consume_and_insert():
         except Exception as e:
             print(f"Unexpected error: {e}")
 
-    # Insert incomplete batch
-    if batch:
-        process_batch(batch)
-
-    print("All messages processed.")
-
 if __name__ == '__main__':
-    consume_and_insert()
+    while True:
+        consume_and_insert()

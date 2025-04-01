@@ -44,7 +44,18 @@ def mongo_consumer():
         in_string = message.value.decode()
         if in_string == "DONE":
             print("\nProducer has finished sending data. Processing remaining tuples...")
-            break
+            
+            if batch:
+                try:
+                    collection.insert_many(batch, ordered=False)
+                    total_inserted += len(batch)
+                    print(f"Batch inserted. Total inserted: {total_inserted}")
+                    print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
+                except errors.BulkWriteError as bwe:
+                    inserted_count = len(bwe.details.get("writeErrors", []))
+                    total_inserted += len(batch) - inserted_count
+                    print(f"Batch insert had duplicates. Total inserted: {total_inserted}")
+                    break
         
         doc = parse_kafka_line(in_string)
         batch.append(doc)
@@ -60,17 +71,10 @@ def mongo_consumer():
                 print(f"Inserted {total_inserted} (some duplicates skipped)")
             batch.clear()
 
-    if batch:
-        try:
-            collection.insert_many(batch, ordered=False)
-            total_inserted += len(batch)
-            print(f"Final batch inserted. Total inserted: {total_inserted}")
-        except errors.BulkWriteError as bwe:
-            inserted_count = len(bwe.details.get("writeErrors", []))
-            total_inserted += len(batch) - inserted_count
-            print(f"Final insert had duplicates. Total inserted: {total_inserted}")
+    
 
     client.close()
 
 if __name__ == '__main__':
-    mongo_consumer()
+    while True:
+        mongo_consumer()
