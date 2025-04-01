@@ -18,16 +18,16 @@ def prepare_dw():
 
     # dimentional tables
     create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT)"
-    create_table2 = "CREATE TABLE IF NOT EXISTS dim_location (location_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100))"
+    create_table2 = "CREATE TABLE IF NOT EXISTS dim_location (country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100), latitude DOUBLE, longitude DOUBLE, PRIMARY KEY (latitude, longitude))"
     create_table3 = "CREATE TABLE IF NOT EXISTS dim_target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, target_code INT, target_desc VARCHAR(100), nationality_id INT, nationality VARCHAR(100))"
     create_table4 = "CREATE TABLE IF NOT EXISTS dim_perpetrator (perpetrator_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, group_name VARCHAR(300), motive TEXT)"
     create_table5 = "CREATE TABLE IF NOT EXISTS dim_weapon_type (weapon_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, weapon_code VARCHAR(20), weapon_desc VARCHAR(100))"
     create_table6 = "CREATE TABLE IF NOT EXISTS dim_attack_type (attack_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, attack_code INT, attack_desc VARCHAR(300))"
 
     # fact table
-    create_table7 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date_id INT NOT NULL, location_id INT NOT NULL, attack_type_id INT NOT NULL, \
+    create_table7 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date_id INT NOT NULL, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, location_id INT NOT NULL, attack_type_id INT NOT NULL, \
         target_id INT NOT NULL, perpetrator_id INT NOT NULL, weapon_type_id INT NOT NULL, success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
-        FOREIGN KEY (date_id) REFERENCES dim_date(date_id), FOREIGN KEY (location_id) REFERENCES dim_location(location_id), FOREIGN KEY (attack_type_id) REFERENCES dim_attack_type(attack_type_id), \
+        FOREIGN KEY (date_id) REFERENCES dim_date(date_id), FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude), FOREIGN KEY (attack_type_id) REFERENCES dim_attack_type(attack_type_id), \
         FOREIGN KEY (target_id) REFERENCES dim_target(target_id), FOREIGN KEY (perpetrator_id) REFERENCES dim_perpetrator(perpetrator_id), FOREIGN KEY (weapon_type_id) REFERENCES dim_weapon_type(weapon_type_id))"
 
     # summary table

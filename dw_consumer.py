@@ -17,8 +17,8 @@ def dw_consumer():
     dw_load_query1 = "INSERT INTO dim_date(year, month, day) " \
                       "VALUES(%s,%s,%s)"
     
-    dw_load_query2 = "INSERT INTO dim_location(country_code, country_txt, region_code, region_name, city) " \
-                      "VALUES(%s,%s,%s,%s,%s)"
+    dw_load_query2 = "INSERT IGNORE INTO dim_location(country_code, country_txt, region_code, region_name, city, latitude, longitude) " \
+                      "VALUES(%s,%s,%s,%s,%s,%s,%s)"
     
     dw_load_query3 = "INSERT INTO dim_target(target_code, target_desc, nationality_id, nationality) " \
                       "VALUES(%s,%s,%s,%s)"
@@ -172,7 +172,9 @@ def dw_consumer():
                 region_code = int(data[2].strip())
                 region_name = data[3].strip()
                 city = data[4].strip()
-                dim_location_tuples.append((country_code, country_txt, region_code, region_name, city))
+                latitude = data[5].strip()
+                longitude = data[6].strip()
+                dim_location_tuples.append((country_code, country_txt, region_code, region_name, city, latitude, longitude))
             except Exception as e:
                 print("Error processing date:", e)
 

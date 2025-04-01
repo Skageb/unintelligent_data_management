@@ -20,7 +20,7 @@ def odb_producer():
     "FROM terrorism " \
     "ORDER BY year"
 
-    odb_query2 = "SELECT country, country_txt, region, region_txt, city " \
+    odb_query2 = "SELECT country, country_txt, region, region_txt, city, latitude, longitude " \
     "FROM terrorism " \
     "ORDER BY country_txt"
 
