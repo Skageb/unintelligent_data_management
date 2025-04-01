@@ -1,6 +1,6 @@
 import dash
 from dash import html, Output, Input
-#from data_producer import producer_f
+from data_producer import producer_f
 
 dash.register_page(__name__, path='/')
 
@@ -15,7 +15,7 @@ layout = html.Div([
     html.Div(id='output-div')
 ])
 
-'''@dash.callback(
+@dash.callback(
     Output('output-div', 'children'),
     Input('insert-button', 'n_clicks'),
 )
@@ -24,4 +24,4 @@ def insert_data(n_clicks):
         insert = 'True'
         producer_f(data_pipe, broker_addr, insert)
         return f'Data inserted'
-    return ""'''
+    return 
