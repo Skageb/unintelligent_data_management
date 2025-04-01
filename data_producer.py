@@ -14,7 +14,7 @@ def producer_f(topic,broker_addr):
     try:
         df = pd.read_csv(filename, usecols = [
         "eventid", "iyear", "imonth", "iday", "country", "country_txt", "region", "region_txt",
-        "city", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1",
+        "city", "latitude", "longitude", "success", "suicide", "attacktype1", "attacktype1_txt", "targtype1",
         "targtype1_txt", "natlty1", "natlty1_txt", "gname", "motive", "weaptype1", "weaptype1_txt", "nkill", "nwound",
         "ransom", "ransomamt", "ransompaid"
     ]
@@ -27,6 +27,9 @@ def producer_f(topic,broker_addr):
         df['ransom'] = df['ransom'].fillna(0).astype(int)
         df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
+        df['latitude'] = df['latitude'].fillna(0).astype(float)
+        df['longitude'] = df['longitude'].fillna(0).astype(float)
+
 
 
 

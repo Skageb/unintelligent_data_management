@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: vladimir
 Make sure you have mysql-connector installed:
     pip install mysql-connector-python
 Also, make sure you created a mysql user deuser with password depassword and granted your user all privileges    
@@ -33,6 +32,10 @@ def dw_consumer():
     dw_load_query6 = "INSERT INTO dim_attack_type(attack_code, attack_desc) " \
                       "VALUES(%s,%s)"
     
+    # dw_load_query7 = "INSERT INTO fact_terror_event(event_id, date_id, location_id, attack_type_id, target_id, perpetrator_id, " \
+    # "weapon_type_id, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid) " \
+    #                   "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    
     
     
     # dw_load_query1 = "INSERT INTO fatalities(year,fatalities) " \
@@ -58,6 +61,8 @@ def dw_consumer():
     dim_perpetrator_tuples = []
     dim_weapon_type_tuples = []
     dim_attack_type_tuples = []
+
+    #fact_terror_event_tuples = []
 
     # fatalities_tuples = [] 
     # ransom_tuples = []
@@ -88,6 +93,8 @@ def dw_consumer():
                 dw_cursor.executemany(dw_load_query5, dim_weapon_type_tuples)
                 dw_cursor.executemany(dw_load_query6, dim_attack_type_tuples)
 
+                #dw_cursor.executemany(dw_load_query7, fact_terror_event_tuples)
+
 
 
                 # dw_cursor.executemany(dw_load_query1, fatalities_tuples)
@@ -114,6 +121,9 @@ def dw_consumer():
 
                 dw_cursor.execute("SELECT count(*) FROM dim_attack_type")
                 attack_count = dw_cursor.fetchone()[0]
+
+                # dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
+                # fact_count = dw_cursor.fetchone()[0]
                 
                 # dw_cursor.execute("SELECT count(*) FROM fatalities")
                 # fatalities_count = dw_cursor.fetchone()[0]
@@ -207,6 +217,33 @@ def dw_consumer():
                 dim_attack_type_tuples.append((attack_code, attack_desc))
             except Exception as e:
                 print("Error processing date:", e)
+
+        # # fact terror event
+        # elif in_string.startswith("F:"):
+        #     data = in_string[2:].split(',')
+        #     try: 
+        #         event_id = data[0].strip()
+        #         date_id = int(data[1].strip())
+        #         location_id = int(data[2].strip())
+        #         attack_type_id = int(data[3].strip())
+        #         target_id = int(data[4].strip())
+        #         perpetrator_id = int(data[5].strip())
+        #         weapon_type_id = int(data[6].strip())
+        #         success = int(data[7].strip())
+        #         suicide = int(data[8].strip())
+        #         fatalities = int(data[9].strip())
+        #         wounded = int(data[10].strip())
+        #         ransom_demanded = int(data[11].strip())
+        #         ransom_paid = int(data[12].strip())
+
+        #         fact_terror_event_tuples.append((
+        #             event_id, date_id, location_id, attack_type_id, target_id,
+        #             perpetrator_id, weapon_type_id, success, suicide, fatalities,
+        #             wounded, ransom_demanded, ransom_paid
+        #         ))
+        #     except Exception as e:
+        #         print("Error processing fact tuple:", e)
+
 
 
         # if in_string.startswith("F:"):

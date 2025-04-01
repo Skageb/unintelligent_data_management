@@ -15,6 +15,7 @@ def odb_producer():
     # Connect to MySQL database
     odb_conn = None
 
+    # dimension tables
     odb_query1 = "SELECT year, month, day " \
     "FROM terrorism " \
     "ORDER BY year"
@@ -38,6 +39,11 @@ def odb_producer():
     odb_query6 = "SELECT attacktype, attacktype_txt " \
     "FROM terrorism " \
     "ORDER BY attacktype"
+
+    # fact table    
+    # odb_query7 = "SELECT eventid, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid " \
+    #          "FROM terrorism " \
+    #          "ORDER BY eventid"
 
     
 
@@ -151,6 +157,14 @@ def odb_producer():
         for i in attack_type_tuples:
             line = "A:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
+
+        # # fact_table
+        # odb_cursor = odb_conn.cursor()
+        # odb_cursor.execute(odb_query7)
+        # fact_terror_tuples = odb_cursor.fetchall()
+        # for i in fact_terror_tuples:
+        #     line = "F:" + ",".join(str(x) for x in i)
+        #     producer.send('AggrData', line.encode())
 
 
         # # fatalities   
