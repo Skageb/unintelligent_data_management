@@ -19,7 +19,7 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df.loc[(df["iyear"] >= 2015) & (df["iyear"] <= 2019)]
+        df = df.loc[(df["iyear"] >= 2018) & (df["iyear"] <= 2019)]
         
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
@@ -27,6 +27,7 @@ def producer_f(topic,broker_addr):
         df['ransom'] = df['ransom'].fillna(0).astype(int)
         df['ransomamt'] = df['ransomamt'].fillna(0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
+
 
 
     except FileNotFoundError:

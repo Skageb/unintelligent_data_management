@@ -17,11 +17,11 @@ def prepare_dw():
     use_db = "use dw"
 
     # dimentional tables
-    create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT, date_string DATE)"
+    create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT)"
     create_table2 = "CREATE TABLE IF NOT EXISTS dim_location (location_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100))"
     create_table3 = "CREATE TABLE IF NOT EXISTS dim_target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, target_code INT, target_desc VARCHAR(100), nationality_id INT, nationality VARCHAR(100))"
     create_table4 = "CREATE TABLE IF NOT EXISTS dim_perpetrator (perpetrator_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, group_name VARCHAR(300), motive TEXT)"
-    create_table5 = "CREATE TABLE IF NOT EXISTS dim_weapon_type (weapon_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, weapon_code INT, weapon_desc VARCHAR(100))"
+    create_table5 = "CREATE TABLE IF NOT EXISTS dim_weapon_type (weapon_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, weapon_code VARCHAR(20), weapon_desc VARCHAR(100))"
     create_table6 = "CREATE TABLE IF NOT EXISTS dim_attack_type (attack_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, attack_code INT, attack_desc VARCHAR(300))"
 
     # fact table
