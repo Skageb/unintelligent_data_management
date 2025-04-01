@@ -17,17 +17,25 @@ def prepare_dw():
     use_db = "use dw"
 
     # dimentional tables
-    create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT)"
-    create_table2 = "CREATE TABLE IF NOT EXISTS dim_location (country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100), latitude DOUBLE, longitude DOUBLE, PRIMARY KEY (latitude, longitude))"
-    create_table3 = "CREATE TABLE IF NOT EXISTS dim_target (target_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, target_code INT, target_desc VARCHAR(100), nationality_id INT, nationality VARCHAR(100))"
-    create_table4 = "CREATE TABLE IF NOT EXISTS dim_perpetrator (perpetrator_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, group_name VARCHAR(300), motive TEXT)"
-    create_table5 = "CREATE TABLE IF NOT EXISTS dim_weapon_type (weapon_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, weapon_code VARCHAR(20), weapon_desc VARCHAR(100))"
-    create_table6 = "CREATE TABLE IF NOT EXISTS dim_attack_type (attack_type_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, attack_code INT, attack_desc VARCHAR(300))"
+
+    #remove tab 1, add datetime to fact
+    #create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT)"
+    
+    # dimension tables
+    create_table1 = "CREATE TABLE IF NOT EXISTS dim_location (country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100), latitude DOUBLE, longitude DOUBLE, PRIMARY KEY (latitude, longitude))"
+    create_table2 = "CREATE TABLE IF NOT EXISTS dim_target (target_code INT NOT NULL PRIMARY KEY, target_desc VARCHAR(100))"
+    create_table3 = "CREATE TABLE IF NOT EXISTS dim_nationality (victim_nationality_id INT NOT NULL PRIMARY KEY, victim_nationality_desc VARCHAR(100))"
+    create_table4 = "CREATE TABLE IF NOT EXISTS dim_weapon_type (weapon_code VARCHAR(20) NOT NULL PRIMARY KEY, weapon_desc VARCHAR(100))"
+    create_table5 = "CREATE TABLE IF NOT EXISTS dim_attack_type (attack_code INT NOT NULL PRIMARY KEY, attack_desc VARCHAR(300))"
 
     # fact table
-    create_table7 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, \
-        success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
-        FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude))"
+    create_table6 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date DATE, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, \
+        target_code INT NOT NULL, victim_nationality_id INT NOT NULL, weapon_code VARCHAR(20) NOT NULL, attack_code INT NOT NULL, success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
+        group_name VARCHAR(300), motive TEXT, \
+        FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude), FOREIGN KEY (target_code) REFERENCES dim_target(target_code), \
+        FOREIGN KEY (victim_nationality_id) REFERENCES dim_nationality(victim_nationality_id), FOREIGN KEY (weapon_code) REFERENCES dim_weapon_type(weapon_code), \
+        FOREIGN KEY (attack_code) REFERENCES dim_attack_type(attack_code))"
+
 
     # summary table
 
@@ -53,7 +61,6 @@ def prepare_dw():
         cursor.execute(create_table4)
         cursor.execute(create_table5)
         cursor.execute(create_table6)
-        cursor.execute(create_table7)
 
         
         conn.commit()

@@ -16,34 +16,39 @@ def odb_producer():
     odb_conn = None
 
     # dimension tables
-    odb_query1 = "SELECT year, month, day " \
-    "FROM terrorism " \
-    "ORDER BY year"
-
-    odb_query2 = "SELECT country, country_txt, region, region_txt, city, latitude, longitude " \
+    odb_query1 = "SELECT country, country_txt, region, region_txt, city, latitude, longitude " \
     "FROM terrorism " \
     "ORDER BY country_txt"
 
-    odb_query3 = "SELECT target_type, target_type_txt, victim_nat, victim_nat_txt " \
+    odb_query2 = "SELECT target_type, target_type_txt " \
     "FROM terrorism " \
     "ORDER BY target_type"
 
-    odb_query4 = "SELECT attacker_group, motive " \
+    odb_query3 = "SELECT victim_nat, victim_nat_txt " \
     "FROM terrorism " \
-    "ORDER BY attacker_group"
+    "ORDER BY victim_nat"
 
-    odb_query5 = "SELECT weapon_type, weapon_type_txt " \
+    odb_query4 = "SELECT weapon_type, weapon_type_txt " \
     "FROM terrorism " \
     "ORDER BY weapon_type_txt"
 
-    odb_query6 = "SELECT attacktype, attacktype_txt " \
+    odb_query5 = "SELECT attacktype, attacktype_txt " \
     "FROM terrorism " \
     "ORDER BY attacktype"
 
     # fact table    
-    # odb_query7 = "SELECT eventid, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid " \
-    #          "FROM terrorism " \
-    #          "ORDER BY eventid"
+    odb_query6 = "SELECT eventid, year, month, day, latitude, longitude, target_type, victim_nat, weapon_type, attacktype, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, attacker_group, motive " \
+             "FROM terrorism " \
+             "ORDER BY eventid"
+    
+
+    # # fact table
+    # create_table6 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date DATE, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, \
+    #     target_code INT NOT NULL, victim_nationality_id INT NOT NULL, weapon_code VARCHAR(20) NOT NULL, attack_code INT NOT NULL, success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
+    #     group_name VARCHAR(300), motive TEXT, \
+    #     FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude), FOREIGN KEY (target_code) REFERENCES dim_target(target_code), \
+    #     FOREIGN KEY (victim_nationality_id) REFERENCES dim_nationality(victim_nationality_id), FOREIGN KEY (weapon_code) REFERENCES dim_weapon_type(weapon_code), \
+    #     FOREIGN KEY (attack_code) REFERENCES dim_attack_type(attack_code))"
 
     
 
@@ -110,17 +115,9 @@ def odb_producer():
         if odb_conn.is_connected():
                 print('\nConnected to source ODB MySQL database')
 
-        # dim_date   
+        # location_date   
         odb_cursor = odb_conn.cursor()
         odb_cursor.execute(odb_query1)
-        date_tuples = odb_cursor.fetchall()
-        for i in date_tuples:
-            line = "D:" + ",".join(str(x) for x in i)
-            producer.send('AggrData', line.encode())
-
-        # dim_location
-        odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_query2)
         location_tuples = odb_cursor.fetchall()
         for i in location_tuples:
             line = "L:" + ",".join(str(x) for x in i)
@@ -128,43 +125,44 @@ def odb_producer():
 
         # dim_target
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_query3)
+        odb_cursor.execute(odb_query2)
         target_tuples = odb_cursor.fetchall()
         for i in target_tuples:
             line = "T:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
 
-        # dim_perpatrator
+        # dim_nationality
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_query4)
-        perpatrator_tuples = odb_cursor.fetchall()
-        for i in perpatrator_tuples:
-            line = "P:" + ",".join(str(x) for x in i)
+        odb_cursor.execute(odb_query3)
+        nationality_tuples = odb_cursor.fetchall()
+        for i in nationality_tuples:
+            line = "N:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
 
-        # dim_weapon_type
+        # dim_weapon
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_query5)
-        weapon_type_tuples = odb_cursor.fetchall()
-        for i in weapon_type_tuples:
+        odb_cursor.execute(odb_query4)
+        weapon_tuples = odb_cursor.fetchall()
+        for i in weapon_tuples:
             line = "W:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
 
-        # dim_attack_type
+        # dim_attack
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_query6)
-        attack_type_tuples = odb_cursor.fetchall()
-        for i in attack_type_tuples:
+        odb_cursor.execute(odb_query5)
+        attack_tuples = odb_cursor.fetchall()
+        for i in attack_tuples:
             line = "A:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
 
-        # # fact_table
-        # odb_cursor = odb_conn.cursor()
-        # odb_cursor.execute(odb_query7)
-        # fact_terror_tuples = odb_cursor.fetchall()
-        # for i in fact_terror_tuples:
-        #     line = "F:" + ",".join(str(x) for x in i)
-        #     producer.send('AggrData', line.encode())
+
+        # fact_table
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query6)
+        fact_terror_tuples = odb_cursor.fetchall()
+        for i in fact_terror_tuples:
+            line = "F:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
 
 
         # # fatalities   

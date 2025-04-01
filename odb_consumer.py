@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 
-@author: vladimir
 Make sure you have mysql-connector installed:
     pip install mysql-connector-python
 Also, make sure you created a mysql user deuser with password depassword and granted your user all privileges    
@@ -23,8 +22,7 @@ def odb_consumer():
     consumer = KafkaConsumer('Data',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
                              
-    #tuples = [('jones','loc1','prod1', 10),('smith','loc1','prod1', 20),('jones','loc1','prod1', 10)]  
-    
+
     print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
     
     tuples = [] 

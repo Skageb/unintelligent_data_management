@@ -9,31 +9,29 @@ Also, make sure you created a mysql user deuser with password depassword and gra
 import mysql.connector
 from mysql.connector import Error
 from kafka import KafkaConsumer
+import datetime
 
 def dw_consumer():
     # Connect to MySQL database
     dw_conn = None
-
-    dw_load_query1 = "INSERT INTO dim_date(year, month, day) " \
-                      "VALUES(%s,%s,%s)"
     
-    dw_load_query2 = "INSERT IGNORE INTO dim_location(country_code, country_txt, region_code, region_name, city, latitude, longitude) " \
+    dw_load_query1 = "INSERT IGNORE INTO dim_location(country_code, country_txt, region_code, region_name, city, latitude, longitude) " \
                       "VALUES(%s,%s,%s,%s,%s,%s,%s)"
     
-    dw_load_query3 = "INSERT INTO dim_target(target_code, target_desc, nationality_id, nationality) " \
-                      "VALUES(%s,%s,%s,%s)"
-    
-    dw_load_query4 = "INSERT INTO dim_perpetrator(group_name, motive) " \
+    dw_load_query2 = "INSERT IGNORE INTO dim_target(target_code, target_desc) " \
                       "VALUES(%s,%s)"
     
-    dw_load_query5 = "INSERT INTO dim_weapon_type(weapon_code, weapon_desc) " \
+    dw_load_query3 = "INSERT IGNORE INTO dim_nationality(victim_nationality_id, victim_nationality_desc) " \
                       "VALUES(%s,%s)"
     
-    dw_load_query6 = "INSERT INTO dim_attack_type(attack_code, attack_desc) " \
+    dw_load_query4 = "INSERT IGNORE INTO dim_weapon_type(weapon_code, weapon_desc) " \
                       "VALUES(%s,%s)"
     
-    dw_load_query7 = "INSERT INTO fact_terror_event(event_id, latitude, longitude, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid) " \
-                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    dw_load_query5 = "INSERT IGNORE INTO dim_attack_type(attack_code, attack_desc) " \
+                      "VALUES(%s,%s)"
+    
+    dw_load_query6 = "INSERT INTO fact_terror_event(event_id, date, latitude, longitude, target_code, victim_nationality_id, weapon_code, attack_code, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, group_name, motive) " \
+                      "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     
     
     
@@ -54,10 +52,9 @@ def dw_consumer():
     
     print('\nWaiting for AGGREGATED TUPLES, Ctr/Z to stop ...')
     
-    dim_date_tuples = []
     dim_location_tuples = []
     dim_target_tuples = []
-    dim_perpetrator_tuples = []
+    dim_nationality_tuples = []
     dim_weapon_type_tuples = []
     dim_attack_type_tuples = []
 
@@ -85,14 +82,13 @@ def dw_consumer():
                 
                 dw_cursor = dw_conn.cursor()
             
-                dw_cursor.executemany(dw_load_query1, dim_date_tuples)
-                dw_cursor.executemany(dw_load_query2, dim_location_tuples)
-                dw_cursor.executemany(dw_load_query3, dim_target_tuples)
-                dw_cursor.executemany(dw_load_query4, dim_perpetrator_tuples)
-                dw_cursor.executemany(dw_load_query5, dim_weapon_type_tuples)
-                dw_cursor.executemany(dw_load_query6, dim_attack_type_tuples)
+                dw_cursor.executemany(dw_load_query1, dim_location_tuples)
+                dw_cursor.executemany(dw_load_query2, dim_target_tuples)
+                dw_cursor.executemany(dw_load_query3, dim_nationality_tuples)
+                dw_cursor.executemany(dw_load_query4, dim_weapon_type_tuples)
+                dw_cursor.executemany(dw_load_query5, dim_attack_type_tuples)
 
-                dw_cursor.executemany(dw_load_query7, fact_terror_event_tuples)
+                dw_cursor.executemany(dw_load_query6, fact_terror_event_tuples)
 
 
 
@@ -103,26 +99,26 @@ def dw_consumer():
                 
                 dw_conn.commit()
 
-                dw_cursor.execute("SELECT count(*) FROM dim_date")
-                date_count = dw_cursor.fetchone()[0]
+                #dw_cursor.execute("SELECT count(*) FROM dim_date")
+                #date_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM dim_location")
-                location_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM dim_location")
+                # location_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM dim_target")
-                target_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM dim_target")
+                # target_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM dim_perpetrator")
-                perpetrator_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM dim_perpetrator")
+                # perpetrator_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM dim_weapon_type")
-                weapon_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM dim_weapon_type")
+                # weapon_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM dim_attack_type")
-                attack_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM dim_attack_type")
+                # attack_count = dw_cursor.fetchone()[0]
 
-                dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
-                fact_count = dw_cursor.fetchone()[0]
+                # dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
+                # fact_count = dw_cursor.fetchone()[0]
                 
                 # dw_cursor.execute("SELECT count(*) FROM fatalities")
                 # fatalities_count = dw_cursor.fetchone()[0]
@@ -151,19 +147,8 @@ def dw_consumer():
                     dw_conn.close()
             break
 
-        # date dimension
-        if in_string.startswith("D:"):
-            data = in_string[2:].split(',')
-            try: 
-                year = int(data[0].strip())
-                month = int(data[1].strip())
-                day = int(data[2].strip())
-                dim_date_tuples.append((year, month, day))
-            except Exception as e:
-                print("Error processing date:", e)
-
         # location dimension
-        elif in_string.startswith("L:"):
+        if in_string.startswith("L:"):
             data = in_string[2:].split(',')
             try: 
                 country_code = int(data[0].strip())
@@ -183,19 +168,17 @@ def dw_consumer():
             try: 
                 target_code = int(data[0].strip())
                 target_desc = data[1].strip()
-                nationality_id = int(data[2].strip())
-                nationality = data[3].strip()
-                dim_target_tuples.append((target_code, target_desc, nationality_id, nationality))
+                dim_target_tuples.append((target_code, target_desc))
             except Exception as e:
                 print("Error processing date:", e)
 
-        # perpetrator dimension
-        elif in_string.startswith("P:"):
+        # nationality dimension
+        elif in_string.startswith("N:"):
             data = in_string[2:].split(',')
             try: 
-                group_name = data[0].strip()
-                motive = data[1].strip()
-                dim_perpetrator_tuples.append((group_name, motive))
+                nationality_id = int(data[0].strip())
+                nationality = data[1].strip()
+                dim_nationality_tuples.append((nationality_id, nationality))
             except Exception as e:
                 print("Error processing date:", e)
 
@@ -224,16 +207,32 @@ def dw_consumer():
             data = in_string[2:].split(',')
             try: 
                 event_id = data[0].strip()
-                latitude = float(data[1].strip())
-                longitude = float(data[2].strip())
-                suicide = int(data[3].strip())
-                success = int(data[4].strip())
-                fatalities = int(data[5].strip())
-                wounded = int(data[6].strip())
-                ransom_demanded = int(data[7].strip())
-                ransom_paid = int(data[8].strip())
+                year = int(data[1].strip())
+                month = int(data[2].strip())
+                day = int(data[3].strip())
 
-                fact_terror_event_tuples.append((event_id, latitude, longitude, suicide, success, fatalities, wounded, ransom_demanded, ransom_paid))
+                try:
+                    date = datetime.date(year, month, day)
+                except ValueError:
+                    date = datetime.date(1970, 1, 1)
+
+
+                latitude = float(data[4].strip())
+                longitude = float(data[5].strip())
+                target_code = int(data[6].strip())
+                victim_nationality_id = int(data[7].strip())
+                weapon_code = int(data[8].strip())
+                attack_code = int(data[9].strip())
+                suicide = int(data[10].strip())
+                success = int(data[11].strip())
+                fatalities = int(data[12].strip())
+                wounded = int(data[13].strip())
+                ransom_demanded = int(data[14].strip())
+                ransom_paid = int(data[15].strip())
+                group_name = data[16].strip()
+                motive = data[17].strip()
+
+                fact_terror_event_tuples.append((event_id, date, latitude, longitude, target_code, victim_nationality_id, weapon_code, attack_code, suicide, success, fatalities, wounded, ransom_demanded, ransom_paid, group_name, motive))
             except Exception as e:
                 print("Error processing date:", e)
 
