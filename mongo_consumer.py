@@ -3,6 +3,7 @@
 
 from kafka import KafkaConsumer
 from pymongo import MongoClient, errors
+from mongo_summary import run_summaries
 import csv
 from io import StringIO
 
@@ -55,7 +56,9 @@ def mongo_consumer():
                     inserted_count = len(bwe.details.get("writeErrors", []))
                     total_inserted += len(batch) - inserted_count
                     print(f"Batch insert had duplicates. Total inserted: {total_inserted}")
-                    break
+
+            run_summaries(db)    
+            break
         
         doc = parse_kafka_line(in_string)
         batch.append(doc)
@@ -70,8 +73,6 @@ def mongo_consumer():
                 total_inserted += len(batch) - inserted_count
                 print(f"Inserted {total_inserted} (some duplicates skipped)")
             batch.clear()
-
-    
 
     client.close()
 
