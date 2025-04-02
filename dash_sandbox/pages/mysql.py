@@ -66,6 +66,44 @@ def create_globe_plot(df):
     # Show the figure
     return fig
 
+def create_location_graph(lat, long):
+    df = pd.DataFrame({
+        "lat": [lat],
+        "lon": [long]
+    })
+
+    fig = px.scatter_geo(
+        df,
+        lat="lat",
+        lon="lon",
+        projection="natural earth",
+    )
+
+    fig.update_traces(marker=dict(size=10, color="red"))
+
+    # Zoom into the location
+    fig.update_geos(
+        center={"lat": lat, "lon": long},
+        projection_scale=4,  # Higher = more zoomed in
+        showland=True,
+        landcolor="lightgreen",
+        showocean=True,
+        oceancolor="lightblue",
+        showcountries=True,
+        countrywidth=0.5
+    )
+
+    # Make plot smaller and cleaner
+    fig.update_layout(
+        height=300,
+        width=400,
+        margin=dict(l=5, r=5, t=5, b=5),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+
+    return fig
+
 df_init = fetch_data_from_api()
 
 layout = dbc.Container([html.Div([
@@ -239,6 +277,13 @@ def create_HTML_report(row):
         body += f'The attack was performed with the use of {row["weapon_type_txt"]}. '
     
     children_object.append(html.Div(body))
+    children_object.append(html.H5('Location:'))
+    children_object.append(dcc.Graph(id='report-location-map', 
+                                     figure=create_location_graph(row['latitude'], row['longitude']),
+                                     config={
+                                        'displayModeBar': False,
+                                        'displaylogo': False
+                                    }))
     return children_object
     
 @callback(
@@ -277,3 +322,5 @@ def pretty_date(year, month, day):
         formatted_date = formatted_date[1:]
 
     return formatted_date
+
+
