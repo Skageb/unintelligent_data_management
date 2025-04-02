@@ -52,7 +52,12 @@ def create_globe_plot(df):
     # Optional: sort alphabetically or by iso_code
     country_counts = country_counts.sort_values(by='country').reset_index(drop=True)
 
-    fig = px.choropleth(country_counts, locations='iso_code', color='count', hover_data=['country', 'count'], color_continuous_scale = ["#fff5eb", "#fd8d3c", "#f03b20", "#bd0026", "#800026"])
+    fig = px.choropleth(country_counts, 
+                        locations='iso_code', 
+                        color='count', 
+                        hover_data=['country', 'count'], 
+                        color_continuous_scale = ["#fff5eb", "#fd8d3c", "#f03b20", "#bd0026", "#800026"],
+                        labels={'count': 'Number of Attacks'})
 
     fig.update_geos(projection_type='orthographic')
 
@@ -60,7 +65,9 @@ def create_globe_plot(df):
 
     fig.update_layout(
         margin=dict(l=5, r=5, t=5, b=5),
-        
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        coloraxis_colorbar_title='Number of Attacks'
     )
 
     # Show the figure
@@ -110,7 +117,10 @@ layout = dbc.Container([html.Div([
         
         html.H1("Number of Terror Attacks in Each Country"),
         dcc.Store(id='df', data=df_init.to_dict('records')),
-        dcc.Graph(id='globe-graph'),
+        dcc.Graph(id='globe-graph', config={
+                                        'displayModeBar': False,
+                                        'displaylogo': False
+                                    }),
         html.H1("Find a Scoop"),
         html.Article('Use this tool to find a news story on an attack that is unique based on the selected category.'),
         dbc.Row(children=[
