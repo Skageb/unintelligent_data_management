@@ -9,6 +9,7 @@ Also, make sure you created a mysql user deuser with password depassword and gra
 import mysql.connector
 from mysql.connector import Error
 from kafka import KafkaConsumer
+from kafka import KafkaProducer
 import datetime
 
 def dw_consumer():
@@ -34,21 +35,6 @@ def dw_consumer():
                       "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     
     
-    ## summary tables
-    
-    dw_load_query7 = "INSERT INTO fatalities(year,fatalities) " \
-                     "VALUES(%s,%s)"
-    
-    dw_load_query8 = "INSERT INTO ransom_by_country(year, country, country_txt, ransom_demanded, ransom_paid) " \
-                     "VALUES(%s,%s,%s,%s,%s)"
-    
-    dw_load_query9 = "INSERT INTO terror_in_norway(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive) " \
-                     "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    
-    dw_load_query10 = "INSERT INTO weapon_type(year, weapon_type, weapon_type_desc, fatalities, wounded, occurences) " \
-                     "VALUES(%s,%s,%s,%s,%s,%s)"
-    
-    
     consumer = KafkaConsumer('AggrData',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     
     print('\nWaiting for AGGREGATED TUPLES, Ctr/Z to stop ...')
@@ -60,11 +46,6 @@ def dw_consumer():
     dim_attack_type_tuples = []
 
     fact_terror_event_tuples = []
-
-    fatalities_tuples = [] 
-    ransom_tuples = []
-    norway_tuples = []
-    weapon_tuples = []
 
     for message in consumer:
         in_string = message.value.decode()
@@ -91,10 +72,6 @@ def dw_consumer():
 
                 dw_cursor.executemany(dw_load_query6, fact_terror_event_tuples)
 
-                dw_cursor.executemany(dw_load_query7, fatalities_tuples)
-                dw_cursor.executemany(dw_load_query8, ransom_tuples)
-                dw_cursor.executemany(dw_load_query9, norway_tuples)
-                dw_cursor.executemany(dw_load_query10, weapon_tuples)
                 
                 dw_conn.commit()
 
@@ -115,18 +92,6 @@ def dw_consumer():
 
                 dw_cursor.execute("SELECT count(*) FROM fact_terror_event")
                 fact_count = dw_cursor.fetchone()[0]
-                
-                dw_cursor.execute("SELECT count(*) FROM fatalities")
-                fatalities_count = dw_cursor.fetchone()[0]
-
-                dw_cursor.execute("SELECT count(*) FROM ransom_by_country")
-                ransom_count = dw_cursor.fetchone()[0]
-
-                dw_cursor.execute("SELECT count(*) FROM terror_in_norway")
-                norway_count = dw_cursor.fetchone()[0]
-
-                dw_cursor.execute("SELECT count(*) FROM weapon_type")
-                weapon_count = dw_cursor.fetchone()[0]
 
                 print('DW is loaded: {} total records inserted in fact table'.format(fact_count))
                 print('              {} total records inserted in location table'.format(location_count))
@@ -134,13 +99,7 @@ def dw_consumer():
                 print('              {} total records inserted in nationality table'.format(nationality_count))
                 print('              {} total records inserted in weapon table'.format(weapon_count))
                 print('              {} total records inserted in attack table'.format(attack_count))
-                print('              {} total records inserted in fatalities table'.format(fatalities_count))
-                print('              {} total records inserted in ransom table'.format(ransom_count))
-                print('              {} total records inserted in norway table'.format(norway_count))
-                print('              {} total records inserted in weapon-aggr table'.format(weapon_count))
-
-
-                    
+        
             except Error as e:
                 print(e)
                 
@@ -148,6 +107,11 @@ def dw_consumer():
                 if dw_conn is not None and dw_conn.is_connected():
                     dw_cursor.close()
                     dw_conn.close()
+
+                producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
+                producer.send('dw-update-stream', b'dw update event')
+                producer.flush()
+                print('\nDW UPDATE EVENT SENT TO dw-update-stream')
             break
 
         # location dimension
@@ -238,66 +202,6 @@ def dw_consumer():
                 fact_terror_event_tuples.append((event_id, date, latitude, longitude, target_code, victim_nationality_id, weapon_code, attack_code, suicide, success, fatalities, wounded, ransom_demanded, ransom_paid, group_name, motive))
             except Exception as e:
                 print("Error processing date:", e)
-
-
-        # fatalities
-        elif in_string.startswith("D:"):
-            data = in_string[2:].split(',')
-            try: 
-                year = int(data[0].strip())
-                fatalities = int(data[1].strip())
-                fatalities_tuples.append((year, fatalities))
-                #print("\nFatalities Tuple Received: ({}, {})".format(year, fatalities))
-            except Exception as e:
-                print("Error processing fatalities data:", e)
-
-        # ransom table
-        elif in_string.startswith("R:"):
-            data = in_string[2:].split(',')
-            try:
-                year = data[0].strip()
-                country = data[1].strip()
-                country_txt = data[2].strip()
-                total_ransom_demanded = int(data[3].strip())
-                total_ransom_paid = int(data[4].strip())
-                ransom_tuples.append((year, country, country_txt, total_ransom_demanded, total_ransom_paid))
-                #print("\nRansom Tuple Received: ({}, {}, {}, {}, {})".format(year, country, country_txt, total_ransom_demanded, total_ransom_paid))
-            except Exception as e:
-                print("Error processing ransom data:", e)
-
-        # norway table
-        elif in_string.startswith("B:"):
-            data = in_string[2:].split(',')
-            try:
-                year = data[0].strip()
-                city = data[1].strip()
-                fatalities = int(data[2].strip())
-                wounded = int(data[3].strip())
-                success = int(data[4].strip())
-                suicide = int(data[5].strip())
-                attacker_group = data[6].strip()
-                target_type = data[7].strip()
-                weapon_type = data[8].strip()
-                motive = data[9].strip()
-                norway_tuples.append((year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive))
-                #print("\nNorway Tuple Received: ({}, {}, {}, {}, {}, {}, {}, {}, {})".format(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive))
-            except Exception as e:
-                print("Error processing norway data:", e)
-
-        # Weapon table
-        elif in_string.startswith("C:"):
-            data = in_string[2:].split(',')
-            try:
-                year = data[0].strip()
-                weapon_type = int(data[1].strip())
-                weapon_type_txt = data[2].strip()
-                fatalities = int(data[3].strip())
-                wounded = int(data[4].strip())
-                eventid = int(data[5].strip())
-                weapon_tuples.append((year, weapon_type, weapon_type_txt, fatalities, wounded,eventid))
-                #print("\nWeapon Tuple Received: ({}, {}, {}, {}, {}, {})".format(year, weapon_type, weapon_type_txt, fatalities, wounded,eventid))
-            except Exception as e:
-                print("Error processing weapon data:", e)
     
 if __name__ == '__main__':
     while True:

@@ -17,11 +17,14 @@ def insert_into_neo4j(tx, batch):
     query = """
     UNWIND $batch AS event
     MERGE (a:Incident {id: event.attack_id})
-    SET a.year = event.year, a.city = event.city, a.country = event.country, a.attack_type = event.attack_type
+    SET a.year = event.year, a.city = event.city, a.attack_type = event.attack_type, a.attack_group = event.attack_group
     MERGE (c:Country {name: event.country})
     MERGE (t:AttackType {name: event.attack_type})
+    MERGE (g:AttackGroup {name: event.attack_group})
     MERGE (a)-[:HAPPENED_IN]->(c)
     MERGE (a)-[:OF_TYPE]->(t)
+    MERGE (g)-[:COMMITS_TERROR_IN]->(c)
+    MERGE (a)-[:COMMITED_BY]->(g)
     """
     tx.run(query, batch=batch)
 
@@ -73,13 +76,15 @@ def consume_and_insert():
             city = escape_string(fields[8])
             country = escape_string(fields[5])
             attack_type = escape_string(fields[14])
+            attack_group = escape_string(fields[19])
 
             batch.append({
                 "attack_id": attack_id,
                 "year": year,
                 "city": city,
                 "country": country,
-                "attack_type": attack_type
+                "attack_type": attack_type,
+                "attack_group": attack_group
             })
 
             if len(batch) >= 1000:
