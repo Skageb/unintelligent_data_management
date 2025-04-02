@@ -27,9 +27,7 @@ def producer_f(topic,broker_addr):
         df['ransom'] = df['ransom'].fillna(0).astype(int)
         df['ransomamt'] = df['ransomamt'].fillna(0).clip(lower=0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).clip(lower=0).astype(int)
-        df['latitude'] = df['latitude'].fillna(0).astype(float)
-        df['longitude'] = df['longitude'].fillna(0).astype(float)
-
+        df = df.dropna(subset=['latitude', 'longitude','iyear','imonth','iday'])
 
 
     except FileNotFoundError:
