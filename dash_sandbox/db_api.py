@@ -98,3 +98,59 @@ def get_neo4j_attacks(country: str = Query(..., description="Country name to que
             return attacks
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/neo4j/get_terror_groups")
+def neo_get_all_groups():
+    query = """
+    MATCH (g:AttackGroup)
+    WHERE NOT g.name = 'Unknown'
+    RETURN DISTINCT g.name AS group_name
+    ORDER BY group_name
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            return [record["group_name"] for record in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/api/neo4j/top_10_groups")
+def neo_get_all_groups():
+    query = """
+    MATCH (g:AttackGroup)<-[:COMMITED_BY]-(a:Incident)
+    WHERE g.name <> "Unknown"  // Optional: exclude "Unknown" groups
+    RETURN g.name AS group_name, COUNT(a) AS num_attacks
+    ORDER BY num_attacks DESC
+    LIMIT 10
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            return [dict(record) for record in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/neo4j/get_attack_stats_on_country")
+def neo_get_attack_stats_on_country():
+    query = """
+    // Step 1: Count attacks per (country, group)
+    MATCH (a:Incident)-[:HAPPENED_IN]->(c:Country)
+    OPTIONAL MATCH (a)-[:COMMITED_BY]->(g:AttackGroup)
+    WITH c.name AS country, COALESCE(g.name, "Unknown") AS group_name, COUNT(*) AS attack_count
+
+    // Step 2: Group them by country and sort to get the top group per country
+    ORDER BY attack_count DESC
+    WITH country, COLLECT({group: group_name, count: attack_count}) AS groups
+
+    // Step 3: Extract top group + total attacks
+    RETURN 
+    country,
+    groups[0].group AS most_active_group,
+    REDUCE(s = 0, g IN groups | s + g.count) AS total_attacks
+    """
+    with driver.session() as session:
+        result = session.run(query)
+        data = [dict(record) for record in result]
+        return data
