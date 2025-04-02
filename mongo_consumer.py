@@ -15,7 +15,7 @@ KAFKA_BROKER = "127.0.0.1:29092"
 
 input_fields = [
     "eventid", "year", "month", "day", "country", "country_txt", "region", "region_txt",
-    "city", "success", "suicide", "attacktype", "attacktype_txt", "target_type",
+    "city", "latitude", "longitude", "success", "suicide", "attacktype", "attacktype_txt", "target_type",
     "target_type_txt", "victim_nat", "victim_nat_txt", "attacker_group", "motive",
     "weapon_type", "weapon_type_txt", "fatalities", "wounded", "ransom",
     "ransom_demanded", "ransom_paid"

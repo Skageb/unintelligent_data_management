@@ -15,45 +15,82 @@ def odb_producer():
     # Connect to MySQL database
     odb_conn = None
 
-    odb_aggregate_query1 = """
-    SELECT year,
-           SUM(SUM(fatalities)) OVER (ORDER BY year) AS cumulative_fatalities
-    FROM terrorism
-    GROUP BY year
-    ORDER BY year
-"""
+    # dimension tables
+    odb_query1 = "SELECT country, country_txt, region, region_txt, city, latitude, longitude " \
+    "FROM terrorism " \
+    "ORDER BY country_txt"
 
-    odb_aggregate_query2 = """
-    SELECT year,
-           country,
-           country_txt,
-           SUM(SUM(ransom_demanded)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_demanded,
-           SUM(SUM(ransom_paid)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_paid
-    FROM terrorism
-    WHERE ransom = 1
-    GROUP BY year, country, country_txt
-    ORDER BY country, year
-""" 
+    odb_query2 = "SELECT target_type, target_type_txt " \
+    "FROM terrorism " \
+    "ORDER BY target_type"
 
-    odb_aggregate_query3 = """
-    SELECT year, city, fatalities, wounded, success, suicide,
-           attacker_group, target_type_txt, weapon_type_txt, motive
-    FROM terrorism
-    WHERE country = 151
-    ORDER BY fatalities DESC
-""" 
+    odb_query3 = "SELECT victim_nat, victim_nat_txt " \
+    "FROM terrorism " \
+    "ORDER BY victim_nat"
 
-    odb_aggregate_query4 = """
-    SELECT year,
-           weapon_type,
-           weapon_type_txt,
-           SUM(SUM(fatalities)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_fatalities,
-           SUM(SUM(wounded)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_wounded,
-           SUM(COUNT(eventid)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_occurences
-    FROM terrorism
-    GROUP BY year, weapon_type, weapon_type_txt
-    ORDER BY weapon_type, year
-"""
+    odb_query4 = "SELECT weapon_type, weapon_type_txt " \
+    "FROM terrorism " \
+    "ORDER BY weapon_type_txt"
+
+    odb_query5 = "SELECT attacktype, attacktype_txt " \
+    "FROM terrorism " \
+    "ORDER BY attacktype"
+
+    # fact table    
+    odb_query6 = "SELECT eventid, year, month, day, latitude, longitude, target_type, victim_nat, weapon_type, attacktype, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, attacker_group, motive " \
+             "FROM terrorism " \
+             "ORDER BY eventid"
+    
+
+    # # fact table
+    # create_table6 = "CREATE TABLE IF NOT EXISTS fact_terror_event (event_id VARCHAR(20) PRIMARY KEY, date DATE, latitude DOUBLE NOT NULL, longitude DOUBLE NOT NULL, \
+    #     target_code INT NOT NULL, victim_nationality_id INT NOT NULL, weapon_code VARCHAR(20) NOT NULL, attack_code INT NOT NULL, success INT, suicide INT, fatalities INT, wounded INT, ransom_demanded INT, ransom_paid INT, \
+    #     group_name VARCHAR(300), motive TEXT, \
+    #     FOREIGN KEY (latitude, longitude) REFERENCES dim_location(latitude, longitude), FOREIGN KEY (target_code) REFERENCES dim_target(target_code), \
+    #     FOREIGN KEY (victim_nationality_id) REFERENCES dim_nationality(victim_nationality_id), FOREIGN KEY (weapon_code) REFERENCES dim_weapon_type(weapon_code), \
+    #     FOREIGN KEY (attack_code) REFERENCES dim_attack_type(attack_code))"
+
+    
+
+#     odb_aggregate_query1 = """
+#     SELECT year,
+#            SUM(SUM(fatalities)) OVER (ORDER BY year) AS cumulative_fatalities
+#     FROM terrorism
+#     GROUP BY year
+#     ORDER BY year
+# """
+
+    # odb_aggregate_query2 = """
+    # SELECT year,
+    #        country,
+    #        country_txt,
+    #        SUM(SUM(ransom_demanded)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_demanded,
+    #        SUM(SUM(ransom_paid)) OVER (PARTITION BY country, country_txt ORDER BY year) AS cumulative_ransom_paid
+    # FROM terrorism
+    # WHERE ransom = 1
+    # GROUP BY year, country, country_txt
+    # ORDER BY country, year
+# """ 
+
+#     odb_aggregate_query3 = """
+#     SELECT year, city, fatalities, wounded, success, suicide,
+#            attacker_group, target_type_txt, weapon_type_txt, motive
+#     FROM terrorism
+#     WHERE country = 151
+#     ORDER BY fatalities DESC
+# """ 
+
+#     odb_aggregate_query4 = """
+#     SELECT year,
+#            weapon_type,
+#            weapon_type_txt,
+#            SUM(SUM(fatalities)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_fatalities,
+#            SUM(SUM(wounded)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_wounded,
+#            SUM(COUNT(eventid)) OVER (PARTITION BY weapon_type, weapon_type_txt ORDER BY year) AS cumulative_occurences
+#     FROM terrorism
+#     GROUP BY year, weapon_type, weapon_type_txt
+#     ORDER BY weapon_type, year
+# """
 
  
      
@@ -78,39 +115,89 @@ def odb_producer():
         if odb_conn.is_connected():
                 print('\nConnected to source ODB MySQL database')
 
-        # fatalities   
+        # location_date   
         odb_cursor = odb_conn.cursor()
-        odb_cursor.execute(odb_aggregate_query1)
-        fatalities_tuples = odb_cursor.fetchall()
-        for i in fatalities_tuples:
-            line = "F:" + ",".join(str(x) for x in (i[0], int(i[1])))
+        odb_cursor.execute(odb_query1)
+        location_tuples = odb_cursor.fetchall()
+        for i in location_tuples:
+            line = "L:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
-            print("\nProduced aggregated fatalities tuple: {}".format(line))
 
-
-        # ransom
-        odb_cursor.execute(odb_aggregate_query2)
-        ransom_tuples = odb_cursor.fetchall()
-        for i in ransom_tuples:
-            line = "R:" + ",".join(str(x) for x in i)
+        # dim_target
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query2)
+        target_tuples = odb_cursor.fetchall()
+        for i in target_tuples:
+            line = "T:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
-            print("\nProduced aggregated ransom tuple: {}".format(line))
 
-        # norway
-        odb_cursor.execute(odb_aggregate_query3)
-        norway_tuples = odb_cursor.fetchall()
-        for i in norway_tuples:
+        # dim_nationality
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query3)
+        nationality_tuples = odb_cursor.fetchall()
+        for i in nationality_tuples:
             line = "N:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
-            print("\nProduced aggregated norway tuple: {}".format(line))
 
-        # norway
-        odb_cursor.execute(odb_aggregate_query4)
+        # dim_weapon
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query4)
         weapon_tuples = odb_cursor.fetchall()
         for i in weapon_tuples:
             line = "W:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
-            print("\nProduced aggregated weapon tuple: {}".format(line))
+
+        # dim_attack
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query5)
+        attack_tuples = odb_cursor.fetchall()
+        for i in attack_tuples:
+            line = "A:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
+
+
+        # fact_table
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query6)
+        fact_terror_tuples = odb_cursor.fetchall()
+        for i in fact_terror_tuples:
+            line = "F:" + ",".join(str(x) for x in i)
+            producer.send('AggrData', line.encode())
+
+
+        # # fatalities   
+        # odb_cursor = odb_conn.cursor()
+        # odb_cursor.execute(odb_aggregate_query1)
+        # fatalities_tuples = odb_cursor.fetchall()
+        # for i in fatalities_tuples:
+        #     line = "F:" + ",".join(str(x) for x in (i[0], int(i[1])))
+        #     producer.send('AggrData', line.encode())
+        #     print("\nProduced aggregated fatalities tuple: {}".format(line))
+
+
+        # # ransom
+        # odb_cursor.execute(odb_aggregate_query2)
+        # ransom_tuples = odb_cursor.fetchall()
+        # for i in ransom_tuples:
+        #     line = "R:" + ",".join(str(x) for x in i)
+        #     producer.send('AggrData', line.encode())
+        #     print("\nProduced aggregated ransom tuple: {}".format(line))
+
+        # # norway
+        # odb_cursor.execute(odb_aggregate_query3)
+        # norway_tuples = odb_cursor.fetchall()
+        # for i in norway_tuples:
+        #     line = "N:" + ",".join(str(x) for x in i)
+        #     producer.send('AggrData', line.encode())
+        #     print("\nProduced aggregated norway tuple: {}".format(line))
+
+        # # norway
+        # odb_cursor.execute(odb_aggregate_query4)
+        # weapon_tuples = odb_cursor.fetchall()
+        # for i in weapon_tuples:
+        #     line = "W:" + ",".join(str(x) for x in i)
+        #     producer.send('AggrData', line.encode())
+        #     print("\nProduced aggregated weapon tuple: {}".format(line))
 
         producer.send('AggrData', b"DONE")
         producer.flush()

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 
-@author: vladimir
 Make sure you have mysql-connector installed:
     pip install mysql-connector-python
 Also, make sure you created a mysql user deuser with password depassword and granted your user all privileges    
@@ -16,15 +15,14 @@ from kafka import KafkaConsumer, KafkaProducer
 def odb_consumer():
     # Connect to MySQL database
     conn = None
-    query = "INSERT INTO terrorism(eventid, year, month, day, country, country_txt, region, region_txt, city, success, suicide, attacktype, attacktype_txt, target_type, target_type_txt, victim_nat, victim_nat_txt, attacker_group, motive, weapon_type, weapon_type_txt, fatalities, wounded, ransom, ransom_demanded, ransom_paid) "\
-        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    query = "INSERT INTO terrorism(eventid, year, month, day, country, country_txt, region, region_txt, city, latitude, longitude, success, suicide, attacktype, attacktype_txt, target_type, target_type_txt, victim_nat, victim_nat_txt, attacker_group, motive, weapon_type, weapon_type_txt, fatalities, wounded, ransom, ransom_demanded, ransom_paid) "\
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
     
     consumer = KafkaConsumer('Data',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))
     producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
                              
-    #tuples = [('jones','loc1','prod1', 10),('smith','loc1','prod1', 20),('jones','loc1','prod1', 10)]  
-    
+
     print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
     
     tuples = [] 
@@ -78,30 +76,32 @@ def odb_consumer():
         region = in_tuple[6]
         region_txt = in_tuple[7]
         city = in_tuple[8]
-        success = in_tuple[9]
-        suicide = in_tuple[10]
-        attacktype = in_tuple[11]
-        attacktype_txt = in_tuple[12]
-        target_type = in_tuple[13]
-        target_type_txt = in_tuple[14]
-        victim_nat = in_tuple[15]
-        victim_nat_txt = in_tuple[16]
-        attacker_group = in_tuple[17]
-        motive = in_tuple[18]
-        weapon_type = in_tuple[19]
-        weapon_type_txt = in_tuple[20]
-        fatalities = in_tuple[21]
-        wounded = in_tuple[22]
-        ransom = in_tuple[23]
-        ransom_demanded = in_tuple[24]
-        ransom_paid = in_tuple[25]
+        latitude = in_tuple[9]
+        longitude = in_tuple[10]
+        success = in_tuple[11]
+        suicide = in_tuple[12]
+        attacktype = in_tuple[13]
+        attacktype_txt = in_tuple[14]
+        target_type = in_tuple[15]
+        target_type_txt = in_tuple[16]
+        victim_nat = in_tuple[17]
+        victim_nat_txt = in_tuple[18]
+        attacker_group = in_tuple[19]
+        motive = in_tuple[20]
+        weapon_type = in_tuple[21]
+        weapon_type_txt = in_tuple[22]
+        fatalities = in_tuple[23]
+        wounded = in_tuple[24]
+        ransom = in_tuple[25]
+        ransom_demanded = in_tuple[26]
+        ransom_paid = in_tuple[27]
 
         tuples.append((
             eventID, year, month, day,
             country, country_txt,
             region, region_txt,
-            city, success,
-            suicide, attacktype,
+            city, latitude, longitude,
+            success, suicide, attacktype,
             attacktype_txt,
             target_type, target_type_txt,
             victim_nat, victim_nat_txt,
