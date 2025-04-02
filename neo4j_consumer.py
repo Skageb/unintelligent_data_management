@@ -70,7 +70,7 @@ def consume_and_insert():
         try:
             attack_id = fields[0]
             year = int(fields[1])
-            city = escape_string(fields[7])
+            city = escape_string(fields[8])
             country = escape_string(fields[5])
             attack_type = escape_string(fields[14])
 

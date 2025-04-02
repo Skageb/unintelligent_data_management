@@ -19,7 +19,7 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df.loc[(df["iyear"] >= 2018) & (df["iyear"] <= 2019)]
+        df = df.loc[(df["iyear"] >= 2015) & (df["iyear"] <= 2019)]
         
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
@@ -29,7 +29,6 @@ def producer_f(topic,broker_addr):
         df['ransompaid'] = df['ransompaid'].fillna(0).astype(int)
         df['latitude'] = df['latitude'].fillna(0).astype(float)
         df['longitude'] = df['longitude'].fillna(0).astype(float)
-
 
 
 
@@ -50,11 +49,8 @@ def producer_f(topic,broker_addr):
         line = ",".join("" if v is None else str(v).replace(",", ";") for v in row.values)
         producer.send(topic,line.encode())
         
-        #sleep(1)
-
         if not line:
             break
-        #print("\nProduced input tuple {}: {}".format(count-1, line))
 
         if index % 1000 == 0:
             print(f'Produced input number: {count-1}')
