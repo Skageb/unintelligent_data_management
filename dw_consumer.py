@@ -11,6 +11,7 @@ from mysql.connector import Error
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import datetime
+from dw_summary import dw_summary
 
 def dw_consumer():
     # Connect to MySQL database
@@ -111,6 +112,7 @@ def dw_consumer():
                 producer = KafkaProducer(bootstrap_servers='127.0.0.1:29092')
                 producer.send('dw-update-stream', b'dw update event')
                 producer.flush()
+                dw_summary()
                 print('\nDW UPDATE EVENT SENT TO dw-update-stream')
             break
 
