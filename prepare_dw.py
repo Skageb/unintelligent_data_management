@@ -16,11 +16,6 @@ def prepare_dw():
     create_db = " CREATE DATABASE IF NOT EXISTS dw"
     use_db = "use dw"
 
-    # dimentional tables
-
-    #remove tab 1, add datetime to fact
-    #create_table1 = "CREATE TABLE IF NOT EXISTS dim_date (date_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, month INT, day INT)"
-    
     # dimension tables
     create_table1 = "CREATE TABLE IF NOT EXISTS dim_location (country_code INT, country_txt VARCHAR(100), region_code INT, region_name VARCHAR(100), city VARCHAR(100), latitude DOUBLE, longitude DOUBLE, PRIMARY KEY (latitude, longitude))"
     create_table2 = "CREATE TABLE IF NOT EXISTS dim_target (target_code INT NOT NULL PRIMARY KEY, target_desc VARCHAR(100))"
@@ -37,12 +32,12 @@ def prepare_dw():
         FOREIGN KEY (attack_code) REFERENCES dim_attack_type(attack_code))"
 
 
-    # summary table
+    # summary tables
 
-    #create_table1 = "CREATE TABLE IF NOT EXISTS fatalities (fatalitiesId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, fatalities INT)"          
-    #create_table2 = "CREATE TABLE IF NOT EXISTS ransom_by_country (ransomId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), ransom_demanded INT, ransom_paid INT)"
-    #create_table3 = "CREATE TABLE IF NOT EXISTS terror_in_norway (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, city VARCHAR(100), fatalities INT, wounded INT, success INT, suicide INT, attacker_group VARCHAR(300), target_type VARCHAR(100), weapon_type VARCHAR(100), motive TEXT)"
-    #create_table4 = "CREATE TABLE IF NOT EXISTS weapon_type (weapId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, weapon_type INT, weapon_type_desc VARCHAR(100), fatalities INT, wounded INT, occurences INT)"
+    create_table7 = "CREATE TABLE IF NOT EXISTS fatalities (fatalitiesId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, fatalities INT)"          
+    create_table8 = "CREATE TABLE IF NOT EXISTS ransom_by_country (ransomId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), ransom_demanded INT, ransom_paid INT)"
+    create_table9 = "CREATE TABLE IF NOT EXISTS terror_in_norway (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, city VARCHAR(100), fatalities INT, wounded INT, success INT, suicide INT, attacker_group VARCHAR(300), target_type VARCHAR(100), weapon_type VARCHAR(100), motive TEXT)"
+    create_table10 = "CREATE TABLE IF NOT EXISTS weapon_type (weapId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, weapon_type INT, weapon_type_desc VARCHAR(100), fatalities INT, wounded INT, occurences INT)"
 
     try:  
         conn = mysql.connector.connect(host='127.0.0.1', # !!! make sure you use your VM IP here !!!
@@ -61,8 +56,11 @@ def prepare_dw():
         cursor.execute(create_table4)
         cursor.execute(create_table5)
         cursor.execute(create_table6)
+        cursor.execute(create_table7)
+        cursor.execute(create_table8)
+        cursor.execute(create_table9)
+        cursor.execute(create_table10)
 
-        
         conn.commit()
 
         print('DW is prepared')
