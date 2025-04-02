@@ -146,11 +146,26 @@ def neo_get_attack_stats_on_country():
 
     // Step 3: Extract top group + total attacks
     RETURN 
-    country,
-    groups[0].group AS most_active_group,
-    REDUCE(s = 0, g IN groups | s + g.count) AS total_attacks
+        country,
+        REDUCE(s = 0, g IN groups | s + g.count) AS total_attacks,
+        CASE
+            WHEN groups[0].group = 'Unknown' AND size(groups) > 1 THEN groups[1].group
+            ELSE groups[0].group
+        END AS most_active_group
     """
     with driver.session() as session:
         result = session.run(query)
         data = [dict(record) for record in result]
         return data
+
+
+@app.get("/api/neo4j/group_attacks_by_country")
+def get_group_attacks_by_country(group_name: str):
+    query = """
+    MATCH (g:AttackGroup {name: $group_name})<-[:COMMITED_BY]-(a:Incident)-[:HAPPENED_IN]->(c:Country)
+    RETURN c.name AS country, COUNT(a) AS attack_count
+    ORDER BY attack_count DESC
+    """
+    with driver.session() as session:
+        result = session.run(query, group_name=group_name)
+        return [dict(record) for record in result]
