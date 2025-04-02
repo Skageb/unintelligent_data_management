@@ -214,7 +214,7 @@ def dw_consumer():
                 try:
                     date = datetime.date(year, month, day)
                 except ValueError:
-                    date = datetime.date(1970, 1, 1)
+                    date = datetime.date(2100, 1, 1)
 
 
                 latitude = float(data[4].strip())
