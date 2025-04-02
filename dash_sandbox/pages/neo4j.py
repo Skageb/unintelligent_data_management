@@ -1,45 +1,30 @@
 import dash
 from dash import html, dcc, callback, Input, Output
 from neo4j import GraphDatabase
+import requests
+import pandas as pd
 
-dash.register_page(__name__, path='/neo4j')
+dash.register_page(__name__, path='/old/neo4j')
 
-uri = "neo4j://localhost:7687"
+'''uri = "neo4j://localhost:7687"
 username = "neo4j"
 password = "password"
 
 driver = GraphDatabase.driver(uri, auth=(username, password))
-
+'''
 # Query Neo4j database to get countries
 def get_countries():
-    with driver.session() as session:
-        query = """
-        MATCH (c:Country)
-        RETURN c.name AS country
-        """
-        result = session.run(query)
-        countries = [record['country'] for record in result]
-        return countries
+    response = requests.get("http://localhost:5001/api/neo4j_countries")
+    countries = response.json()
+
+    return countries
+
 
 # Query Neo4j to get attacks in selected country
-def query_neo4j(country):
-    with driver.session() as session:
-        query = """
-        MATCH (a:Incident)-[:HAPPENED_IN]->(c:Country)
-        WHERE c.name = $country
-        RETURN a.id AS attack_id, a.year AS year, a.city AS city, a.attack_type AS attack_type
-        ORDER BY a.year DESC
-        """
-        result = session.run(query, country=country)
-        attacks = []
-        for record in result:
-            attacks.append({
-                'attack_id': record['attack_id'],
-                'year': record['year'],
-                'city': record['city'],
-                'attack_type': record['attack_type']
-            })
-        return attacks
+def attack_on_country_call(country):
+    response = requests.get("http://localhost:5001/api/neo4j_attacks")
+    attacks = response.json()
+    return attacks
 
 # HTML layout
 layout = html.Div([
@@ -75,7 +60,7 @@ def display_attacks_by_country(selected_country):
         return html.Div("Please select a country from the dropdown.", style={'textAlign': 'center'})
 
     # Fetch attacks from selected country
-    attacks = query_neo4j(selected_country)
+    attacks = attack_on_country_call(selected_country)
     
     if not attacks:
         return html.Div("No attacks found for this country.", style={'textAlign': 'center'})
