@@ -32,7 +32,7 @@ def dw_consumer():
     dw_load_query5 = "INSERT IGNORE INTO dim_attack_type(attack_code, attack_desc) " \
                       "VALUES(%s,%s)"
     
-    dw_load_query6 = "INSERT INTO fact_terror_event(event_id, date, latitude, longitude, target_code, victim_nationality_id, weapon_code, attack_code, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, group_name, motive) " \
+    dw_load_query6 = "INSERT IGNORE INTO fact_terror_event(event_id, date, latitude, longitude, target_code, victim_nationality_id, weapon_code, attack_code, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, group_name, motive) " \
                       "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     
     

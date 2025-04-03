@@ -72,10 +72,10 @@ def dw_summary():
         ) AS yearly
         ORDER BY weapon_code, year
     """
-    insert_fatalities = "INSERT INTO fatalities(year,fatalities) VALUES(%s,%s)"
-    insert_ransom = "INSERT INTO ransom_by_country(year, country, country_txt, ransom_demanded, ransom_paid) VALUES(%s,%s,%s,%s,%s)"
-    insert_norway = "INSERT INTO terror_in_norway(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    insert_weapon = "INSERT INTO weapon_type(year, weapon_type, weapon_type_desc, fatalities, wounded, occurences) VALUES(%s,%s,%s,%s,%s,%s)"
+    insert_fatalities = "INSERT IGNORE INTO fatalities(year,fatalities) VALUES(%s,%s)"
+    insert_ransom = "INSERT IGNORE INTO ransom_by_country(year, country, country_txt, ransom_demanded, ransom_paid) VALUES(%s,%s,%s,%s,%s)"
+    insert_norway = "INSERT IGNORE INTO terror_in_norway(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_weapon = "INSERT IGNORE INTO weapon_type(year, weapon_type, weapon_type_desc, fatalities, wounded, occurences) VALUES(%s,%s,%s,%s,%s,%s)"
 
     try:
         conn = mysql.connector.connect(
