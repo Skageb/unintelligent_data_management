@@ -2,8 +2,9 @@
 from kafka import KafkaProducer
 from time import sleep
 import pandas as pd
+import sys
 
-def producer_f(topic,broker_addr):
+def producer_f(topic, broker_addr, start_year=2015, end_year=2019):
 
     producer = KafkaProducer(bootstrap_servers=broker_addr,api_version=(2,0,2))
 
@@ -19,7 +20,7 @@ def producer_f(topic,broker_addr):
         "ransom", "ransomamt", "ransompaid"
     ]
 )
-        df = df.loc[(df["iyear"] >= 2015) & (df["iyear"] <= 2019)]
+        df = df.loc[(df["iyear"] >= start_year) & (df["iyear"] <= end_year)]
         
         df['nwound'] = df['nwound'].fillna(0).astype(int)
         df['nkill'] = df['nkill'].fillna(0).astype(int)
@@ -28,6 +29,9 @@ def producer_f(topic,broker_addr):
         df['ransomamt'] = df['ransomamt'].fillna(0).clip(lower=0).astype(int)
         df['ransompaid'] = df['ransompaid'].fillna(0).clip(lower=0).astype(int)
         df = df.dropna(subset=['latitude', 'longitude','iyear','imonth','iday'])
+        df = df[(df['imonth'] >= 1) & (df['imonth'] <= 12)]
+        df = df[(df['iday'] >= 1) & (df['iday'] <= 31)]
+
 
 
     except FileNotFoundError:
@@ -59,7 +63,37 @@ def producer_f(topic,broker_addr):
     producer.flush()
     print("\nDone with producing data to topic {}.".format(topic))
 
-data_pipe = 'Data'
-broker_addr = '127.0.0.1:29092'
+if __name__ == "__main__":
+    data_pipe = 'Data'
+    broker_addr = '127.0.0.1:29092'
 
-producer_f(data_pipe, broker_addr)
+    allowed_years = set(range(1970, 2021))
+    args = sys.argv[1:]
+
+    if len(args) == 0:
+        start, end = 2015, 2019
+    elif len(args) == 1:
+        try:
+            year = int(args[0])
+            if year not in allowed_years:
+                raise ValueError
+            start = end = year
+        except ValueError:
+            print("Invalid year. Please provide a year between 1970 and 2020")
+            sys.exit(1)
+    elif len(args) == 2:
+        try:
+            start = int(args[0])
+            end = int(args[1])
+            if start not in allowed_years or end not in allowed_years:
+                raise ValueError("Years must be between 1970 and 2020")
+            if start > end:
+                raise ValueError("Start year must be less than or equal to end year.")
+        except ValueError as ve:
+            print(f"Invalid input: {ve}")
+            sys.exit(1)
+    else:
+        print("Usage: data_producer.py [start_year] [end_year]")
+        sys.exit(1)
+
+    producer_f(data_pipe, broker_addr, start_year=start, end_year=end)
