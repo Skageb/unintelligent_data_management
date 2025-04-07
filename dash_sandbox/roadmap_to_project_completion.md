@@ -3,7 +3,8 @@
 - [ ] Neo4j Page: 
   - [ ] Create the graphs connected to terror group in neo4j page (Weapons used, in what country do they operate).
   - [ ] Toggle global and group globe plot
-- [ ] Mongo and SQL: Ask vladimir wether data processing in front end is fine.
+- [ ] Mongo and SQL: 
+  - [x] Ask vladimir wether data processing in front end is fine.
   - [ ] SQL: if not fine, create queries were possible for data processing through SQL queries.
   - [ ] Mongo: If not fine, create corresponding mongo queries for the mongo page.
   - [ ] Optional: filter search for spesific attack to create repport on.
