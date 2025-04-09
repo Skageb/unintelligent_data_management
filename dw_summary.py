@@ -39,16 +39,22 @@ def dw_summary():
         ORDER BY country_code, year
     """
 
-    # terror in norway
-    dw_aggregate_query3= """
-        SELECT YEAR(f.date), l.city, f.fatalities, f.wounded, f.success, f.suicide,
-            f.group_name, t.target_desc, w.weapon_desc, f.motive
-        FROM fact_terror_event f
-        JOIN dim_location l ON f.latitude = l.latitude AND f.longitude = l.longitude
-        JOIN dim_target t ON f.target_code = t.target_code
-        JOIN dim_weapon_type w ON f.weapon_code = w.weapon_code
-        WHERE l.country_code = 151
-        ORDER BY f.fatalities DESC
+    # terror by country
+    dw_aggregate_query3 = """
+        SELECT year,
+            country_code AS country,
+            country_txt,
+            SUM(number_of_attacks) OVER (PARTITION BY country_code, country_txt ORDER BY year) AS cumulative_attacks
+        FROM (
+            SELECT YEAR(f.date) AS year,
+                l.country_code,
+                l.country_txt,
+                COUNT(*) AS number_of_attacks
+            FROM fact_terror_event f
+            JOIN dim_location l ON f.latitude = l.latitude AND f.longitude = l.longitude
+            GROUP BY YEAR(f.date), l.country_code, l.country_txt
+        ) AS yearly
+        ORDER BY country_code, year
     """
 
     # weapon type
@@ -74,7 +80,7 @@ def dw_summary():
     """
     insert_fatalities = "INSERT IGNORE INTO fatalities(year,fatalities) VALUES(%s,%s)"
     insert_ransom = "INSERT IGNORE INTO ransom_by_country(year, country, country_txt, ransom_demanded, ransom_paid) VALUES(%s,%s,%s,%s,%s)"
-    insert_norway = "INSERT IGNORE INTO terror_in_norway(year, city, fatalities, wounded, success, suicide, attacker_group, target_type, weapon_type, motive) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_country = "INSERT IGNORE INTO terror_by_country (year, country, country_txt, number_of_attacks) VALUES (%s, %s, %s, %s)"
     insert_weapon = "INSERT IGNORE INTO weapon_type(year, weapon_type, weapon_type_desc, fatalities, wounded, occurences) VALUES(%s,%s,%s,%s,%s,%s)"
 
     try:
@@ -104,7 +110,7 @@ def dw_summary():
         # norway
         cursor.execute(dw_aggregate_query3)
         rows = cursor.fetchall()
-        cursor.executemany(insert_norway, rows)
+        cursor.executemany(insert_country, rows)
 
         # weapon type
         cursor.execute(dw_aggregate_query4)
