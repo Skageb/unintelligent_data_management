@@ -38,7 +38,7 @@ def process_batch(batch):
         print(f"Error inserting batch: {e}")
 
 consumer = KafkaConsumer(
-    'Data',
+    'NeoData',
     bootstrap_servers='127.0.0.1:29092',
     api_version=(2, 0, 2),
 )
