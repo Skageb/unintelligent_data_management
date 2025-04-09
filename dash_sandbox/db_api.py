@@ -18,6 +18,8 @@ app.add_middleware(
 )
 
 # ---------- MySQL Endpoint ----------
+
+#Get all data from odb
 @app.get("/api/mysql_data")
 def get_mysql_data():
     try:
@@ -36,6 +38,186 @@ def get_mysql_data():
         return df.to_dict(orient='records')
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+#Collect data from aggregated country tables in dw
+@app.get("/api/mysql/by_country_data")
+def get_by_country_data_sql(stat_type:str):
+    assert stat_type in ['ransom_demanded', 'ransom_paid', 'num_attacks']
+    try:
+        conn = mysql.connector.connect(
+            host='127.0.0.1',
+            port=23306,
+            user='root',
+            password='secret',
+            database='dw'
+        )
+        cursor = conn.cursor()
+        if 'ransom' in stat_type:
+
+            table_name = 'ransom_by_country'
+            col_of_interest = stat_type
+        
+        elif stat_type == 'num_attacks':
+            table_name = 'terror_by_country'
+            col_of_interest = 'number_of_attacks'
+
+        #Flexible query for similar tables in dw
+        query = f"""SELECT t.country_txt, t.{col_of_interest}
+                    FROM {table_name} AS t
+                    WHERE t.year = (
+                        SELECT MAX(t2.year)
+                        FROM {table_name} AS t2
+                        WHERE t2.country_txt = t.country_txt
+                    )"""
+        
+        cursor.execute(query)
+        result = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(result, columns=columns)
+        return df.to_dict(orient='records')
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get('/api/mysql/get_report_col_from_event_id')
+def get_report_col_sql(event_id:int):
+    query = f"""
+    SELECT f.event_id, 
+        f.group_name AS attacker_group, 
+        f.latitude, 
+        f.longitude, 
+        f.motive, 
+        f.ransom_demanded, 
+        f.ransom_paid, 
+        f.wounded, 
+        f.fatalities, 
+        f.date,
+        l.city, 
+        l.country_txt, 
+        a.attack_desc AS attacktype_txt, 
+        w.weapon_desc AS weapon_type_txt 
+    FROM fact_terror_event f 
+    LEFT JOIN dim_location l 
+        ON f.latitude = l.latitude AND f.longitude = l.longitude 
+    LEFT JOIN dim_attack_type a 
+        ON f.attack_code = a.attack_code 
+    LEFT JOIN dim_weapon_type w 
+        ON f.weapon_code = w.weapon_code 
+    WHERE f.event_id = {event_id}"""
+    
+    conn = mysql.connector.connect(
+        host='127.0.0.1',
+        port=23306,
+        user='root',
+        password='secret',
+        database='dw'
+    )
+    cursor = conn.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(result, columns=columns)
+    return df.to_dict(orient='records')
+
+@app.get('/api/mysql/get_scoop')
+def get_scoop_sql(category: str, search_option: bool = Query(True)):
+    agg_func = 'MAX' if search_option else 'MIN'
+    if category in ['fatalities', 'wounded', 'ransom_demanded', 'ransom_paid']:
+        query = f"""
+            SELECT f.{category} as value, f.event_id
+            FROM fact_terror_event as f
+            WHERE f.{category} = (
+                SELECT {agg_func}(f.{category})
+                FROM fact_terror_event f
+            )
+            LIMIT 1;
+        """ 
+    
+    else:
+    
+        if category == 'attack_desc':
+            table = 'dim_attack_type'
+            join_att = 'attack_code'
+        
+        elif category == 'weapon_desc':
+            table = 'dim_weapon_type'
+            join_att = 'weapon_code'
+
+        elif category == 'target_desc':
+            table = 'dim_target'
+            join_att = 'target_code'
+        
+        order = "DESC" if search_option else "ASC"
+
+        
+        query = f"""
+            SELECT f.event_id, d.{category} AS value
+            FROM fact_terror_event f
+            JOIN {table} d ON f.{join_att} = d.{join_att}
+            WHERE d.{category} = (
+                SELECT d2.{category}
+                FROM fact_terror_event f2
+                JOIN {table} d2 ON f2.{join_att} = d2.{join_att}
+                GROUP BY d2.{category}
+                ORDER BY COUNT(*) {order}
+                LIMIT 1
+            )
+            LIMIT 1;
+        """
+    conn = mysql.connector.connect(
+        host='127.0.0.1',
+        port=23306,
+        user='root',
+        password='secret',
+        database='dw'
+    )
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query)
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not result:
+        return {"error": "No data found"}
+
+    return {
+        "value": result["value"],
+        "event_id": result["event_id"]
+    }
+    
+
+
+
+    
+
+#Get all collum names from dw
+@app.get("/api/mysql/all_attributes")
+def get_all_attributes_sql():
+    query = """
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME IN ('dim_attack_type', 'dim_location', 'dim_nationality', 'dim_target', 'dim_weapon_type', 'fact_terror_event')
+            """
+    try:
+        conn = mysql.connector.connect(
+            host='127.0.0.1',
+            port=23306,
+            user='root',
+            password='secret',
+            database='dw'
+        )
+        cursor = conn.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(result, columns=columns)
+        df = df.drop_duplicates()
+        return df.to_dict(orient='records')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
 
 
 # ---------- MongoDB Endpoint ----------

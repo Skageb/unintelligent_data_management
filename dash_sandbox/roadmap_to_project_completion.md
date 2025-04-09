@@ -13,7 +13,7 @@
   - [ ] Mongo
   - [ ] Neo
 - [ ] All pages: Cleanup code and README:
-  - [ ] SQL
+  - [x] SQL
   - [ ] Mongo
   - [ ] Neo
   - [ ] README
