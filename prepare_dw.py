@@ -27,10 +27,9 @@ def prepare_dw():
 
 
     # summary tables
-
     create_table7 = "CREATE TABLE IF NOT EXISTS fatalities (fatalitiesId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, fatalities INT, UNIQUE KEY uniq_year_fatalities(year,fatalities))"          
     create_table8 = "CREATE TABLE IF NOT EXISTS ransom_by_country (ransomId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), ransom_demanded INT, ransom_paid INT, UNIQUE KEY uniq_year_ransom(year,country))"
-    create_table9 = "CREATE TABLE IF NOT EXISTS terror_by_country (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), number_of_attacks INT)"
+    create_table9 = "CREATE TABLE IF NOT EXISTS terror_by_country (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), number_of_attacks INT, UNIQUE KEY uniq_terror_count(year,country,number_of_attacks))"
     create_table10 = "CREATE TABLE IF NOT EXISTS weapon_type (weapId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, weapon_type INT, weapon_type_desc VARCHAR(100), fatalities INT, wounded INT, occurences INT, UNIQUE KEY uniq_year_weapon(year,weapon_type))"
 
     try:  
