@@ -1,3 +1,5 @@
+# ChatGPT has been involved in the process of generating these queires, in an attempt to simulate the same queries as the SQL pre-aggregated summary tables.
+
 from pymongo.collection import Collection
 
 def run_summaries(db):
