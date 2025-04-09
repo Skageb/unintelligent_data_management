@@ -107,7 +107,7 @@ def dw_summary():
         rows = cursor.fetchall()
         cursor.executemany(insert_ransom, rows)
 
-        # norway
+        # country
         cursor.execute(dw_aggregate_query3)
         rows = cursor.fetchall()
         cursor.executemany(insert_country, rows)

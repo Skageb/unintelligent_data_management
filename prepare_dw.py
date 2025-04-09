@@ -35,7 +35,6 @@ def prepare_dw():
 
     create_table7 = "CREATE TABLE IF NOT EXISTS fatalities (fatalitiesId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, fatalities INT, UNIQUE KEY uniq_year_fatalities(year,fatalities))"          
     create_table8 = "CREATE TABLE IF NOT EXISTS ransom_by_country (ransomId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), ransom_demanded INT, ransom_paid INT, UNIQUE KEY uniq_year_ransom(year,country))"
-    #create_table9 = "CREATE TABLE IF NOT EXISTS terror_in_norway (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, city VARCHAR(100), fatalities INT, wounded INT, success INT, suicide INT, attacker_group VARCHAR(300), target_type VARCHAR(100), weapon_type VARCHAR(100), motive TEXT, UNIQUE KEY uniq_norway_summary (year, city, fatalities, attacker_group, target_type, weapon_type))"
     create_table9 = "CREATE TABLE IF NOT EXISTS terror_by_country (terrorId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, country INT, country_txt VARCHAR(100), number_of_attacks INT)"
     create_table10 = "CREATE TABLE IF NOT EXISTS weapon_type (weapId INT NOT NULL AUTO_INCREMENT PRIMARY KEY, year YEAR, weapon_type INT, weapon_type_desc VARCHAR(100), fatalities INT, wounded INT, occurences INT, UNIQUE KEY uniq_year_weapon(year,weapon_type))"
 

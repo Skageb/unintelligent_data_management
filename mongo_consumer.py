@@ -8,7 +8,7 @@ import csv
 from io import StringIO
 
 MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
-MONGO_DB = "odb"
+MONGO_DB = "dw"
 MONGO_COLLECTION = "gtd"
 
 KAFKA_TOPIC = "Data"
