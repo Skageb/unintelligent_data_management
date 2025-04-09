@@ -1,3 +1,5 @@
+# ChatGPT has been involved in the process of generating these queires, in an attempt to simulate the same queries as the SQL pre-aggregated summary tables.
+
 from pymongo.collection import Collection
 
 def run_summaries(db):
@@ -84,29 +86,50 @@ def run_summaries(db):
     if ransom:
         db["ransom_by_country"].insert_many(ransom)
 
-    # terror in norway
-    print("Updating terror_in_norway...")
-    norway = list(gtd.aggregate([
-        {"$match": {"country_txt": "Norway"}},
+    # terror by country
+    print("Updating terror_by_country...")
+    terror_by_country = list(gtd.aggregate([
+        {
+            "$group": {
+                "_id": {
+                    "year": "$year",
+                    "country": "$country",
+                    "country_txt": "$country_txt"
+                },
+                "number_of_attacks": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.country": 1, "_id.year": 1}},
+        {
+            "$setWindowFields": {
+                "partitionBy": {
+                    "country": "$_id.country",
+                    "country_txt": "$_id.country_txt"
+                },
+                "sortBy": {"_id.year": 1},
+                "output": {
+                    "cumulative_attacks": {
+                        "$sum": "$number_of_attacks",
+                        "window": {"documents": ["unbounded", "current"]}
+                    }
+                }
+            }
+        },
         {
             "$project": {
                 "_id": 0,
-                "year": "$year",
-                "city": "$city",
-                "fatalities": {"$toInt": "$fatalities"},
-                "wounded": {"$toInt": "$wounded"},
-                "success": {"$toInt": "$success"},
-                "suicide": {"$toInt": "$suicide"},
-                "attacker_group": "$attacker_group",
-                "target_type_txt": "$target_type_txt",
-                "weapon_type_txt": "$weapon_type_txt",
-                "motive": "$motive"
+                "year": "$_id.year",
+                "country": "$_id.country",
+                "country_txt": "$_id.country_txt",
+                "number_of_attacks": "$cumulative_attacks"
             }
         }
     ]))
-    db["terror_in_norway"].delete_many({})
-    if norway:
-        db["terror_in_norway"].insert_many(norway)
+
+    db["terror_by_country"].delete_many({})
+    if terror_by_country:
+        db["terror_by_country"].insert_many(terror_by_country)
+
 
     # weapon type summary
     print("Updating weapon_type_summary...")

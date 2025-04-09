@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Make sure you have mysql-connector installed:
-    pip install mysql-connector-python
-Also, make sure you created a mysql user deuser with password depassword and granted your user all privileges    
-"""
 
 import mysql.connector
 from mysql.connector import Error
@@ -39,6 +34,8 @@ def odb_producer():
     odb_query6 = "SELECT eventid, year, month, day, latitude, longitude, target_type, victim_nat, weapon_type, attacktype, success, suicide, fatalities, wounded, ransom_demanded, ransom_paid, attacker_group, motive " \
              "FROM terrorism " \
              "ORDER BY eventid"
+    
+    odb_query_mongo = "SELECT * FROM terrorism"
 
                           
     consumer = KafkaConsumer('odb-update-stream',bootstrap_servers='127.0.0.1:29092',api_version=(2,0,2))                      
@@ -111,8 +108,27 @@ def odb_producer():
             line = "F:" + ",".join(str(x) for x in i)
             producer.send('AggrData', line.encode())
 
+        # mongo
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query_mongo)
+        fact_terror_tuples = odb_cursor.fetchall()
+        for i in fact_terror_tuples:
+            line = ",".join(str(x) for x in i)
+            producer.send('MongoData', line.encode())
+
+        odb_cursor = odb_conn.cursor()
+        odb_cursor.execute(odb_query_mongo)
+        fact_terror_tuples = odb_cursor.fetchall()
+        for i in fact_terror_tuples:
+            line = ",".join(str(x) for x in i)
+            producer.send('NeoData', line.encode())
+
 
         producer.send('AggrData', b"DONE")
+        producer.flush()
+        producer.send('MongoData', b"DONE")
+        producer.flush()
+        producer.send('NeoData', b"DONE")
         producer.flush()
             
     except Error as e:

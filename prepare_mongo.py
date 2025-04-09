@@ -5,7 +5,7 @@ import mysql.connector
 from pymongo import MongoClient
 
 MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
-MONGO_DB = "odb"
+MONGO_DB = "dw"
 MONGO_COLLECTION = "gtd"
 
 def prepare_mongo():
