@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-
-Make sure you have mysql-connector installed:
-    pip install mysql-connector-python
-Also, make sure you created a mysql user deuser with password depassword and granted your user all privileges    
-"""
 
 import mysql.connector
 from mysql.connector import Error
