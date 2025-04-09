@@ -7,11 +7,14 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import pycountry
 
+from cache import cache
+
 dash.register_page(__name__, path='/neo4j')
 
 
 ########## API CALLS ##########
 # Query Neo4j database to get countries
+#@cache.memoize(timeout=3600)
 def get_countries():
     response = requests.get("http://localhost:5001/api/neo4j_countries")
     countries = response.json()
@@ -20,28 +23,33 @@ def get_countries():
 
 
 # Query Neo4j to get attacks in selected country
+#@cache.memoize(timeout=3600)
 def attack_on_country_call(country):
     response = requests.get("http://localhost:5001/api/neo4j_attacks")
     attacks = response.json()
     return attacks
 
+#@cache.memoize(timeout=3600)
 def get_groups():
     response = requests.get("http://localhost:5001/api/neo4j/get_terror_groups")
     countries = response.json()
 
     return countries
 
+#@cache.memoize(timeout=3600)
 def get_top_10_groups():
     response = requests.get("http://localhost:5001/api/neo4j/top_10_groups")
     countries = response.json()
 
     return pd.DataFrame(countries)
 
+#@cache.memoize(timeout=3600)
 def get_attack_stats_on_country():
     response = requests.get("http://localhost:5001/api/neo4j/get_attack_stats_on_country")
     country_attack_data = response.json()
     return pd.DataFrame(country_attack_data)
 
+#@cache.memoize(timeout=3600)
 def get_attack_stats_for_group(group_name: str) -> pd.DataFrame:
     url = "http://localhost:5001/api/neo4j/group_attacks_by_country"
     params = {"group_name": group_name}

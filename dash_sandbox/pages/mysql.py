@@ -9,11 +9,17 @@ import plotly.graph_objects as go
 import requests
 import datetime
 
+from cache import cache
+
 
 dash.register_page(__name__, path='/my_sql')
 
 
+
+
+
 # Function for fetching data from database
+@cache.memoize(timeout=3600)
 def fetch_data_from_api():
     response = requests.get("http://localhost:5001/api/mysql_data")
     data = response.json()
@@ -26,6 +32,7 @@ def country_to_iso(name):
         except LookupError:
             return 2
 
+@cache.memoize(timeout=3600)
 def create_globe_plot(df):
     country_counts = df['country_txt'].value_counts().sort_index().reset_index()
     country_counts.columns = ['country', 'count']
@@ -73,6 +80,7 @@ def create_globe_plot(df):
     # Show the figure
     return fig
 
+@cache.memoize(timeout=3600)
 def create_location_graph(lat, long):
     df = pd.DataFrame({
         "lat": [lat],
@@ -111,16 +119,20 @@ def create_location_graph(lat, long):
 
     return fig
 
-df_init = fetch_data_from_api()
 
 layout = dbc.Container([html.Div([
         
         html.H1("Number of Terror Attacks in Each Country"),
-        dcc.Store(id='df', data=df_init.to_dict('records')),
-        dcc.Graph(id='globe-graph', config={
+       
+        dbc.Spinner(
+             dcc.Graph(id='globe-graph', config={
                                         'displayModeBar': False,
                                         'displaylogo': False
-                                    }),
+                                        }
+            ),
+            color="primary"
+        ),
+
         html.H1("Find a Scoop"),
         html.Article('Use this tool to find a news story on an attack that is unique based on the selected category.'),
         dbc.Row(children=[
@@ -136,41 +148,61 @@ layout = dbc.Container([html.Div([
         html.H1("Terrorism Database"),
         # Display the table
         
-        dash_table.DataTable(
-            id='terrorism-table',
-            columns=[{"name": col, "id": col} for col in df_init.columns],
-            data=df_init.to_dict('records'),
-            page_size=25,
-            style_table={'height': '400px', 'overflowY': 'auto'}
-        ),
-
+        dbc.Spinner(
+            dash_table.DataTable(
+                id='terrorism-table',
+                #columns=[{"name": col, "id": col} for col in df_init.columns],
+                #data=df_init.to_dict('records'),
+                page_size=25,
+                style_table={'height': '400px', 'overflowY': 'auto'}
+            ),
+            color='primary'
+        )
     ])
 ])
 
 @callback(
-    Output('category-input', 'options'),
-    Input('df', 'data')
+    Output('terrorism-table', 'columns'),
+    Output('terrorism-table', 'data'),
+    Input('url', 'pathname')
 )
-def update_category_options(df_dict):
-    df = pd.DataFrame(df_dict)
-    return list(df.columns)
+def fill_database_table(pathname):
+    if pathname == '/my_sql':
+        df = fetch_data_from_api()
+        columns = [{"name": col, "id": col} for col in df.columns]
+        return columns, df.to_dict('records')
+    else:
+        dash.no_update
+
+@callback(
+    Output('category-input', 'options'),
+    Input('url', 'pathname')
+)
+def update_category_options(pathname):
+    if pathname == '/my_sql':
+        df = fetch_data_from_api()
+        return list(df.columns)
+    else:
+        return dash.no_update
 
 @callback(
     Output('globe-graph', 'figure'),
-    Input('df', 'data')
+    Input('url', 'pathname')
 )
-def rotate_globe(df_dict):
-    df = pd.DataFrame(df_dict)
-    return create_globe_plot(df)
+def rotate_globe(pathname):
+    if pathname == '/my_sql':
+        df = fetch_data_from_api()
+        return create_globe_plot(df)
+    else:
+        return dash.no_update, dash.no_update
 
 
 @callback(
     Output('scoop-search-option-col', 'children'),
-    Input('category-input', 'value'),
-    State('df', 'data')
+    Input('category-input', 'value')
 )
-def category_input_response(category, df_dict):
-    df = pd.DataFrame(df_dict)
+def category_input_response(category):
+    df = fetch_data_from_api()
     if category not in df.columns:
         return dash.no_update
     else:
@@ -188,14 +220,13 @@ def category_input_response(category, df_dict):
 @callback(
     Output('attack-report', 'children'),
     Output('attack-report', 'style'),
-    State('df', 'data'),
     State('category-input', 'value'),
     State('scoop-search-option', 'value'),
     Input('generate-report-button', 'n_clicks'),
     Input('new-attack-button', 'n_clicks')
 )
-def generate_report_button_response(df_dict, category, search_option, full_report_n_clicks, search_n_clicks):
-    df = pd.DataFrame(df_dict)
+def generate_report_button_response(category, search_option, full_report_n_clicks, search_n_clicks):
+    df = fetch_data_from_api()
     if ctx.triggered_id == 'generate-report-button':
         n_clicks = full_report_n_clicks
         report_format = 'full'
