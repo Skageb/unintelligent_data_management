@@ -11,7 +11,7 @@ MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
 MONGO_DB = "dw"
 MONGO_COLLECTION = "gtd"
 
-KAFKA_TOPIC = "Data"
+KAFKA_TOPIC = "MongoData"
 KAFKA_BROKER = "127.0.0.1:29092"
 
 input_fields = [
@@ -33,13 +33,14 @@ def mongo_consumer():
     collection = db[MONGO_COLLECTION]
 
     collection.create_index("eventid", unique=True)
-    consumer = KafkaConsumer("Data", bootstrap_servers=KAFKA_BROKER, api_version=(2,0,2))
+    consumer = KafkaConsumer(KAFKA_TOPIC, bootstrap_servers=KAFKA_BROKER, api_version=(2,0,2))
 
     print('\nWaiting for INPUT TUPLES, Ctr/Z to stop ...')
 
     batch = []
     batch_size = 1000
     total_inserted = 0
+    
 
     for message in consumer:
         in_string = message.value.decode()
