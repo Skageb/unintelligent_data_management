@@ -78,7 +78,8 @@ def get_by_country_data_sql(stat_type:str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+#Get colums by joining fact table with dimension tables used to generate the terror report
 @app.get('/api/mysql/get_report_col_from_event_id')
 def get_report_col_sql(event_id:int):
     query = f"""
@@ -119,6 +120,7 @@ def get_report_col_sql(event_id:int):
     df = pd.DataFrame(result, columns=columns)
     return df.to_dict(orient='records')
 
+#Call to fetch the scoop incident, max or min for integer values, most common or least common for varchar values.
 @app.get('/api/mysql/get_scoop')
 def get_scoop_sql(category: str, search_option: bool = Query(True)):
     agg_func = 'MAX' if search_option else 'MIN'
@@ -351,3 +353,31 @@ def get_group_attacks_by_country(group_name: str):
     with driver.session() as session:
         result = session.run(query, group_name=group_name)
         return [dict(record) for record in result]
+    
+
+@app.get("/api/neo4j/group_top_attack_types")
+def get_group_attack_types_from_db(group_name: str):
+    query = """
+    MATCH (g:AttackGroup {name: $group_name})<-[:COMMITED_BY]-(a:Incident)-[:OF_TYPE]->(t:AttackType)
+    WHERE NOT t.name = 'Unknown'
+    RETURN t.name AS attack_type, COUNT(a) AS attack_count
+    ORDER BY attack_count DESC
+    LIMIT 5
+    """
+    with driver.session() as session:
+        result = session.run(query, group_name=group_name)
+        return [dict(record) for record in result]
+
+@app.get("/api/neo4j/group_city")
+def get_cities_for_group(group_name: str):
+    query = """
+    MATCH (g:AttackGroup {name: $group_name})<-[:COMMITED_BY]-(a:Incident)
+    WHERE a.city IS NOT NULL AND NOT a.city = 'Unknown'
+    RETURN a.city AS city, COUNT(a) AS attack_count
+    ORDER BY attack_count DESC
+    LIMIT 5
+    """
+    with driver.session() as session:
+        result = session.run(query, group_name=group_name)
+        return [dict(record) for record in result]
+

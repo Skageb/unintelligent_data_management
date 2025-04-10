@@ -246,7 +246,7 @@ def fill_database_table(pathname):
         columns = [{"name": col, "id": col} for col in df.columns]
         return columns, df.to_dict('records')
     else:
-        dash.no_update
+        return dash.no_update, dash.no_update
 
 
 @callback(
