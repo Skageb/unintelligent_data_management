@@ -74,6 +74,7 @@ def get_scoop_value_and_id(category, search_option):
 
 ############### API CALLS END #############
 
+################# HELPER FUNCTIONS ###############
 
 def country_to_iso(name):
         try:
@@ -135,6 +136,66 @@ def create_globe_plot(df: pd.DataFrame):
     # Show the figure
     return fig
 
+def create_HTML_report(row):
+    
+    if row['city'] == 'Unknown' and row['country_txt'] != 'Unknown':
+        headline = f'Terror report on {row['attacktype_txt']} incident in {row['country_txt']}'
+    else:
+        headline = f'Terror report on {row['attacktype_txt']} incident in {row['city']}, {row['country_txt']}'
+
+    if row['attacktype_txt'] != 'Unknown':
+        headline.replace('Unknown ', '')
+
+    import time
+    row['year'], row['month'], row['day'] = row['date'].split('-')
+    date =  pretty_date(int(row['year']), int(row['month']), int(row['day']))
+
+    children_object = [
+        html.H2(headline),
+        html.H5(f'Date of Attack: {date}'),
+        html.Hr()
+    ]
+    body = f''
+    if row['ransom_demanded']:
+        body += f'A ransom of {row['ransom_demanded']} was demanded by the attacker'
+        if row['ransom_paid'] != 0:
+            body += f', where {row['ransom_paid']} was paid. '
+        else:
+            body += f', but not paid. '
+        
+    if row['motive'] != 'nan':
+        body += f"{row['motive']} "
+    else:
+        body += f"The motive of this attack is not known. "
+
+    if row['attacker_group'] != 'Unknown':
+        body += f'It was revealed that the {row["attacker_group"]} is behind the attack. '
+    damage_str = ''
+    if row['fatalities'] > 0:
+        damage_str += f'Further, {row["fatalities"]} has been reported killed in the attack'
+        if row['wounded'] > 0: 
+            damage_str += f' with another {row['wounded']} wounded'
+        damage_str += '. '
+    else:
+        if row['wounded'] > 0: 
+            damage_str += f'Further it has been reported that {row['wounded']} were wounded in the attack, but nobody was killed. '
+        else:
+            damage_str += f'Further it has been reported that nobody were killed or wounded in the attack. '
+    body += damage_str
+
+    if row['weapon_type_txt'] != 'Unknown':
+        body += f'The attack was performed with the use of {row["weapon_type_txt"]}. '
+    
+    children_object.append(html.Div(body))
+    children_object.append(html.H5('Location:'))
+    children_object.append(dcc.Graph(id='report-location-map', 
+                                     figure=create_location_graph(row['latitude'], row['longitude']),
+                                     config={
+                                        'displayModeBar': False,
+                                        'displaylogo': False
+                                    }))
+    return children_object
+
 @cache.memoize(timeout=3600)
 def create_location_graph(lat, long):
     df = pd.DataFrame({
@@ -174,6 +235,33 @@ def create_location_graph(lat, long):
 
     return fig
 
+def pretty_date(year, month, day):
+    import datetime
+
+
+    date_obj = datetime.date(year, month, day)
+    
+        
+    form = "%dth of %B, %Y"
+    if str(day)[-1] == '1' and str(day) != '11':
+        form = "%dst of %B, %Y"
+    elif str(day)[-1] == '2' and str(day) != '12':
+        form = "%dnd of %B, %Y"
+    elif str(day)[-1] == '3' and str(day) != '13':
+        form = "%drd of %B, %Y"
+    
+
+    formatted_date = date_obj.strftime(form)  # e.g. '24th of December'
+
+    if formatted_date[0] == '0':
+        formatted_date = formatted_date[1:]
+
+    return formatted_date
+
+################# HELPER FUNCTIONS END ###############
+
+
+# Page layout, main frontend code for page
 
 layout = dbc.Container([html.Div([
         dbc.Row(children=[
@@ -234,6 +322,8 @@ layout = dbc.Container([html.Div([
     ])
 ])
 
+
+####################### CALLBACKS #################
 
 @callback(
     Output('terrorism-table', 'columns'),
@@ -341,66 +431,6 @@ def generate_report_button_response(category, search_option, full_report_n_click
         print(row)
         return create_HTML_report(row), style
         
-
-def create_HTML_report(row):
-    
-    if row['city'] == 'Unknown' and row['country_txt'] != 'Unknown':
-        headline = f'Terror report on {row['attacktype_txt']} incident in {row['country_txt']}'
-    else:
-        headline = f'Terror report on {row['attacktype_txt']} incident in {row['city']}, {row['country_txt']}'
-
-    if row['attacktype_txt'] != 'Unknown':
-        headline.replace('Unknown ', '')
-
-    import time
-    row['year'], row['month'], row['day'] = row['date'].split('-')
-    date =  pretty_date(int(row['year']), int(row['month']), int(row['day']))
-
-    children_object = [
-        html.H2(headline),
-        html.H5(f'Date of Attack: {date}'),
-        html.Hr()
-    ]
-    body = f''
-    if row['ransom_demanded']:
-        body += f'A ransom of {row['ransom_demanded']} was demanded by the attacker'
-        if row['ransom_paid'] != 0:
-            body += f', where {row['ransom_paid']} was paid. '
-        else:
-            body += f', but not paid. '
-        
-    if row['motive'] != 'nan':
-        body += f"{row['motive']} "
-    else:
-        body += f"The motive of this attack is not known. "
-
-    if row['attacker_group'] != 'Unknown':
-        body += f'It was revealed that the {row["attacker_group"]} is behind the attack. '
-    damage_str = ''
-    if row['fatalities'] > 0:
-        damage_str += f'Further, {row["fatalities"]} has been reported killed in the attack'
-        if row['wounded'] > 0: 
-            damage_str += f' with another {row['wounded']} wounded'
-        damage_str += '. '
-    else:
-        if row['wounded'] > 0: 
-            damage_str += f'Further it has been reported that {row['wounded']} were wounded in the attack, but nobody was killed. '
-        else:
-            damage_str += f'Further it has been reported that nobody were killed or wounded in the attack. '
-    body += damage_str
-
-    if row['weapon_type_txt'] != 'Unknown':
-        body += f'The attack was performed with the use of {row["weapon_type_txt"]}. '
-    
-    children_object.append(html.Div(body))
-    children_object.append(html.H5('Location:'))
-    children_object.append(dcc.Graph(id='report-location-map', 
-                                     figure=create_location_graph(row['latitude'], row['longitude']),
-                                     config={
-                                        'displayModeBar': False,
-                                        'displaylogo': False
-                                    }))
-    return children_object
     
 @callback(
     Output('new-attack-button', 'n_clicks'),
@@ -416,27 +446,5 @@ def new_search_filter_button_reset(n_clicks, category, search_option):
     return 0
 
 
-def pretty_date(year, month, day):
-    import datetime
-
-
-    date_obj = datetime.date(year, month, day)
-    
-        
-    form = "%dth of %B, %Y"
-    if str(day)[-1] == '1' and str(day) != '11':
-        form = "%dst of %B, %Y"
-    elif str(day)[-1] == '2' and str(day) != '12':
-        form = "%dnd of %B, %Y"
-    elif str(day)[-1] == '3' and str(day) != '13':
-        form = "%drd of %B, %Y"
-    
-
-    formatted_date = date_obj.strftime(form)  # e.g. '24th of December'
-
-    if formatted_date[0] == '0':
-        formatted_date = formatted_date[1:]
-
-    return formatted_date
 
 
