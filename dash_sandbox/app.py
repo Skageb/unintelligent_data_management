@@ -1,11 +1,13 @@
 import dash
 from dash import Dash, html, dcc, callback, Input, Output, _dash_renderer, ctx
 import dash_bootstrap_components as dbc
-
-
+from cache import cache
 
 
 app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+cache.init_app(app.server)
+
 
 app.layout = dbc.Container([
     dcc.Location(id="url", refresh=False),

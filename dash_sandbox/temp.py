@@ -11,7 +11,7 @@ def pretty_date(year, day, month):
 
     formatted_date = date_obj.strftime(form)  # e.g. '24th of December'
 
-    print(formatted_date)
+    return formatted_date
 
 if __name__ == '__main__':
     pretty_date(2020, 21, 12)
