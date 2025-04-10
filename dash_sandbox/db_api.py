@@ -223,20 +223,130 @@ def get_all_attributes_sql():
 
 
 # ---------- MongoDB Endpoint ----------
-@app.get("/api/mongo_data")
+
+@app.get("/api/mongo/table_data")
 def get_mongo_data():
+    MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
+    client = MongoClient(MONGO_URI)
+    odb_db = client["dw"]
+    collection = odb_db["gtd"]
     try:
-        MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
-        client = MongoClient(MONGO_URI)
-        odb_db = client["odb"]
-        collection = odb_db["gtd"]
-        data = list(collection.find())
-        for doc in data:
-            if '_id' in doc:
-                doc['_id'] = str(doc['_id'])
+        data = list(collection.find({}, {"_id": 0}))
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+#Collect data from aggregated country tables in dw
+@app.get("/api/mongo/by_country_data")
+def get_by_country_data_mongo(stat_type:str):
+    assert stat_type in ['ransom_demanded', 'ransom_paid', 'num_attacks']
+
+    try:
+        MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
+        client = MongoClient(MONGO_URI)
+        db = client["dw"]
+
+        # Determine collection and field name
+        if stat_type == 'num_attacks':
+            collection = db["terror_by_country"]
+            value_field = "number_of_attacks"
+        else:
+            collection = db["ransom_by_country"]
+            value_field = stat_type
+
+        # Aggregation: for each country, get the row with the latest year
+        pipeline = [
+            {"$sort": {"country_txt": 1, "year": -1}},  # sort each group by country then latest year
+            {"$group": {
+                "_id": "$country_txt",
+                "year": {"$first": "$year"},
+                "value": {"$first": f"${value_field}"}
+            }},
+            {"$project": {
+                "country_txt": "$_id",
+                stat_type: "$value",
+                "_id": 0
+            }}
+        ]
+
+        result = list(collection.aggregate(pipeline))
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/api/mongo/get_report_col_from_event_id')
+def get_report_col_mongo(event_id:int):
+    MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
+    client = MongoClient(MONGO_URI)
+    odb_db = client["dw"]
+    collection = odb_db["gtd"]
+    
+    doc = collection.find_one({"eventid": f"{event_id}"}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Define which fields to cast
+    int_fields = ['fatalities', 'wounded', 'ransom_demanded', 'ransom_paid']
+    float_fields = ['latitude', 'longitude']
+
+    for field in int_fields:
+        if field in doc:
+            doc[field] = int(float(doc[field]))
+
+
+    for field in float_fields:
+        if field in doc:
+            doc[field] = float(doc[field])
+
+
+    return doc
+    
+
+#Call to fetch the scoop incident, max or min for integer values, most common or least common for varchar values.
+@app.get('/api/mongo/get_scoop')
+def get_scoop_mongo(category: str, search_option: bool = Query(True)):
+    MONGO_URI = "mongodb://root:secret@127.0.0.1:27017/admin"
+    client = MongoClient(MONGO_URI)
+    db = client["dw"]
+    collection = db["gtd"]
+    try:
+        order = -1 if search_option else 1
+
+        if category in ['fatalities', 'wounded', 'ransom_demanded', 'ransom_paid']:
+            doc = collection.find({category: {"$ne": None}}, {"_id": 0, "eventid": 1, category: 1}).sort(category, order).limit(1)
+            result = list(doc)
+            if not result:
+                raise HTTPException(status_code=404, detail="No data found")
+            return {"value": result[0][category], "eventid": result[0]["eventid"]}
+
+        else:
+            pipeline = [
+                {"$match": {category: {"$exists": True}}},
+                {"$group": {"_id": f"${category}", "count": {"$sum": 1}}},
+                {"$sort": {"count": order}},
+                {"$limit": 1}
+            ]
+            agg_result = list(collection.aggregate(pipeline))
+
+            if not agg_result:
+                raise HTTPException(status_code=404, detail="No data found")
+
+            value = agg_result[0]["_id"]
+            match = collection.find_one({category: value}, {"_id": 0, "eventid": 1})
+            return {"value": value, "eventid": match["eventid"]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+    
+
+
+    
+
 
 
 # ---------- Neo4j Setup and Endpoints ----------
