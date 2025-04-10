@@ -98,7 +98,7 @@ def create_globe_plot(df: pd.DataFrame):
     for c in pycountry.countries:
         if c.name not in present_countries:
             missing_rows.append({
-                'country': c.name,
+                'country_txt': c.name,
                 col_of_interest : 0,
                 'iso_code': c.alpha_3
             })
@@ -117,9 +117,9 @@ def create_globe_plot(df: pd.DataFrame):
     fig = px.choropleth(df, 
                         locations='iso_code', 
                         color=col_of_interest, 
-                        hover_data=['country', col_of_interest], 
+                        hover_data=['country_txt', col_of_interest], 
                         color_continuous_scale = ["#fff5eb", "#fd8d3c", "#f03b20", "#bd0026", "#800026"],
-                        labels=labels[col_of_interest])
+                        labels={**{'country_txt': 'Country'}, **labels[col_of_interest]})
 
     fig.update_geos(projection_type='orthographic')
 
