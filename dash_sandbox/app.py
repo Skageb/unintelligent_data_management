@@ -16,6 +16,7 @@ dbc.DropdownMenu(
             dbc.DropdownMenuItem("MySQL", href="/my_sql"),
             dbc.DropdownMenuItem("MongoDB", href="/mongo_db"),
             dbc.DropdownMenuItem("Neo4j", href="/neo4j"),
+            dbc.DropdownMenuItem('Return to Home', href='/')
         ],
         label="Select Backend",
         id="dropdown-menu",
@@ -32,7 +33,9 @@ def update_dropdown_label(pathname):
     """
     Check which path is active and update the dropdown label accordingly.
     """
-    if pathname == "/my_sql":
+    if pathname == '/':
+        return 'Select Backend'
+    elif pathname == "/my_sql":
         return "Selected Backend: MySQL"
     elif pathname == "/mongo_db":
         return "Selected Backend: MongoDB"
