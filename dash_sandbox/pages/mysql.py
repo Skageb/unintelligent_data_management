@@ -19,6 +19,7 @@ dash.register_page(__name__, path='/my_sql')
 
 
 ############### API CALLS #################
+#Get all data from odb
 @cache.memoize(timeout=3600)
 def fetch_data_from_api():
     response = requests.get("http://localhost:5001/api/mysql_data")
@@ -26,7 +27,7 @@ def fetch_data_from_api():
     return pd.DataFrame(data)
 
 
-
+#Collect data from aggregated country tables in DW for globe graph.
 @cache.memoize(timeout=3600)
 def fetch_by_country_stats(stat_type='ransom_demanded'):
     '''stat_type options: ['ransom_demanded', 'ransom_paid', 'num_attacks'] '''
@@ -41,15 +42,8 @@ def fetch_by_country_stats(stat_type='ransom_demanded'):
     except Exception as e:
         print(f"Error fetching stats for group '{stat_type}': {e}")
 
-@cache.memoize(timeout=3600)
-def get_sql_cols():
-    url = "http://localhost:5001/api/mysql/all_attributes"
-    response = requests.get(url)
-    data = response.json()
 
-    return [row.get('COLUMN_NAME') for row in data if 'COLUMN_NAME' in row]
-
-
+#Get colums by joining fact table with dimension tables used to generate the terror report
 def get_report_cols_from_event_id_sql(event_id:int):
     url = 'http://localhost:5001/api/mysql/get_report_col_from_event_id'
     params = {"event_id": event_id}
@@ -60,6 +54,7 @@ def get_report_cols_from_event_id_sql(event_id:int):
     return data
 
 
+#Call to fetch the scoop incident, max or min for integer or float categories, most common or least common for varchar categories.
 def get_scoop_value_and_id(category, search_option):
     '''-> category value, event_id'''
     url = 'http://localhost:5001/api/mysql/get_scoop'
@@ -345,7 +340,6 @@ def fill_database_table(pathname):
 )
 def update_category_options(pathname):
     if pathname == '/my_sql':
-        #return get_sql_cols()
         return [
             {"label": "Attack type", "value": "attack_desc"},
             {"label": "Target of attack", "value": "target_desc"},
