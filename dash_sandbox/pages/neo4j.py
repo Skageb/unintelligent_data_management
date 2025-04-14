@@ -13,22 +13,7 @@ dash.register_page(__name__, path='/neo4j')
 
 
 ########## API CALLS ##########
-# Query Neo4j database to get countries
-@cache.memoize(timeout=3600)
-def get_countries():
-    response = requests.get("http://localhost:5001/api/neo4j_countries")
-    countries = response.json()
-
-    return countries
-
-
-# Query Neo4j to get attacks in selected country
-@cache.memoize(timeout=3600)
-def attack_on_country_call(country):
-    response = requests.get("http://localhost:5001/api/neo4j_attacks")
-    attacks = response.json()
-    return attacks
-
+#Get all unique terror groups.
 @cache.memoize(timeout=3600)
 def get_groups():
     response = requests.get("http://localhost:5001/api/neo4j/get_terror_groups")
@@ -36,6 +21,7 @@ def get_groups():
 
     return countries
 
+#Get the 10 most active terror groups globally with each groups number of attacks
 @cache.memoize(timeout=3600)
 def get_top_10_groups():
     response = requests.get("http://localhost:5001/api/neo4j/top_10_groups")
@@ -43,12 +29,14 @@ def get_top_10_groups():
 
     return pd.DataFrame(countries)
 
+#Get number of attacks and most active terror group by country.
 @cache.memoize(timeout=3600)
 def get_attack_stats_on_country():
     response = requests.get("http://localhost:5001/api/neo4j/get_attack_stats_on_country")
     country_attack_data = response.json()
     return pd.DataFrame(country_attack_data)
 
+#Get number of attacks by country for spesified group
 @cache.memoize(timeout=3600)
 def get_attack_stats_for_group(group_name: str) -> pd.DataFrame:
     url = "http://localhost:5001/api/neo4j/group_attacks_by_country"
@@ -63,6 +51,7 @@ def get_attack_stats_for_group(group_name: str) -> pd.DataFrame:
         print(f"Error fetching stats for group '{group_name}': {e}")
         return pd.DataFrame(columns=["country", "attack_count"])
     
+# Get the 5 most common attack types for spesified terror group with number of attacks for with each attack type
 def get_group_attack_type(group_name: str) -> pd.DataFrame:
     url = 'http://localhost:5001/api/neo4j/group_top_attack_types'
     params = {'group_name': group_name}
@@ -74,6 +63,7 @@ def get_group_attack_type(group_name: str) -> pd.DataFrame:
     except Exception as e:
         print(f"Error fetching stats for group '{group_name}': {e}")
 
+# Get the 5 most common cities attacked for spesified terror group with number of attacks in each city.
 def get_group_city(group_name: str) -> pd.DataFrame:
     '''For a group, return the number of attacks performed in each city'''
     url = 'http://localhost:5001/api/neo4j/group_city'
@@ -88,7 +78,7 @@ def get_group_city(group_name: str) -> pd.DataFrame:
 
 
 ########## API CALLS END ###########
-# Query Neo4j database to get countries
+
 
 
 layout = dbc.Container(html.Div([
