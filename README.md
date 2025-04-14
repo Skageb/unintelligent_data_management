@@ -1,6 +1,9 @@
 # Unintelligent Data Management
 Repository for final project in IKT453 - (Un)intelligent datamanagement. Includes frontend for a data warehouse with 3 options (MySQL, MongoDB and Neo4j) for backend running on different DBMS systems.
 
+## Showcasing of the project
+![edge-cases](https://github.com/user-attachments/assets/375dc0da-e48a-446b-ad32-cbbae4640f66)
+
 ## Installation
 
 To get started. Run a linux virtual machine, and use the following port forwarding
@@ -113,4 +116,8 @@ The MySQL databases can be populated using the files
  - odb_producer.py
  - odb_consumer.py
  - data_producer.py [start_year] [end_year] # (from 1970 to 2020)
+
+## More images
+![globe_plot](https://github.com/user-attachments/assets/29404530-0128-49e2-b324-80bd127dfef4)
+![neo_pie_charts](https://github.com/user-attachments/assets/8c8d559d-0f6a-4bf8-8062-4995f415aafd)
 
