@@ -68,6 +68,7 @@ pip install dash-bootstrap-components
 pip install fastapi
 pip install 'uvicorn[standard]'
 pip install pycountry
+pip install Flask-Caching
 ```
 
 Clone repository
